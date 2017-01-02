@@ -1,62 +1,11 @@
-========================================================================
-    WIN32 APPLICATION : ArcadeFrontEnd Project Overview
-========================================================================
+This is an arcade front end for mame and mame cabinets.
 
-AppWizard has created this ArcadeFrontEnd application for you.
+I coudlnt find a front end that did what I wanted...or even worked properly, so I'm wiring my own.
 
-This file contains a summary of what you will find in each of the files that
-make up your ArcadeFrontEnd application.
+You will notice that everything looks very simple, and that was on purpose. 
+The real star should be the games, so the feature that will let this front end stand apart from the others is that it will load a random game to show its attract screen for X minutes. 
+If the game goes unplayed for another x mins, it exits that game and will randomly load another one.
 
+This is built using SDL2 and winapi. I also use my Utils lib thats in another repo here on git. 
 
-ArcadeFrontEnd.vcxproj
-    This is the main project file for VC++ projects generated using an Application Wizard.
-    It contains information about the version of Visual C++ that generated the file, and
-    information about the platforms, configurations, and project features selected with the
-    Application Wizard.
-
-ArcadeFrontEnd.vcxproj.filters
-    This is the filters file for VC++ projects generated using an Application Wizard. 
-    It contains information about the association between the files in your project 
-    and the filters. This association is used in the IDE to show grouping of files with
-    similar extensions under a specific node (for e.g. ".cpp" files are associated with the
-    "Source Files" filter).
-
-ArcadeFrontEnd.cpp
-    This is the main application source file.
-
-/////////////////////////////////////////////////////////////////////////////
-AppWizard has created the following resources:
-
-ArcadeFrontEnd.rc
-    This is a listing of all of the Microsoft Windows resources that the
-    program uses.  It includes the icons, bitmaps, and cursors that are stored
-    in the RES subdirectory.  This file can be directly edited in Microsoft
-    Visual C++.
-
-Resource.h
-    This is the standard header file, which defines new resource IDs.
-    Microsoft Visual C++ reads and updates this file.
-
-ArcadeFrontEnd.ico
-    This is an icon file, which is used as the application's icon (32x32).
-    This icon is included by the main resource file ArcadeFrontEnd.rc.
-
-small.ico
-    This is an icon file, which contains a smaller version (16x16)
-    of the application's icon. This icon is included by the main resource
-    file ArcadeFrontEnd.rc.
-
-/////////////////////////////////////////////////////////////////////////////
-Other standard files:
-
-StdAfx.h, StdAfx.cpp
-    These files are used to build a precompiled header (PCH) file
-    named ArcadeFrontEnd.pch and a precompiled types file named StdAfx.obj.
-
-/////////////////////////////////////////////////////////////////////////////
-Other notes:
-
-AppWizard uses "TODO:" comments to indicate parts of the source code you
-should add to or customize.
-
-/////////////////////////////////////////////////////////////////////////////
+This is very much a WIP, and the main attraction of auto running games isnt implemented yet, but the basic menu, getting game data and rom lists and showing snap shots are implemented.
