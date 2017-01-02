@@ -1,0 +1,9 @@
+Release/
+Debug/
+ipch/
+*.sdf
+.vs/
+*Debug/
+*Release/
+*debug*/
+*release*/
