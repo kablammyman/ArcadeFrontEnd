@@ -24,7 +24,7 @@ using namespace std;
 //Screen dimension constants
 int SCREEN_WIDTH = 640;
 int SCREEN_HEIGHT = 480;
-SDL_Window *window;
+
 
 void handle_keys(SDL_Event* event, bool *quit)
 {
@@ -88,8 +88,8 @@ int main(int argc, char* argv[])
 		SDL_WINDOWPOS_UNDEFINED,           // initial y position
 		SCREEN_WIDTH,                               // width, in pixels
 		SCREEN_HEIGHT,                               // height, in pixels
-		//SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE
-		SDL_WINDOW_RESIZABLE
+		SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE
+		//SDL_WINDOW_RESIZABLE
 		);
 	// Check that the window was successfully created
 	if (window == NULL) {

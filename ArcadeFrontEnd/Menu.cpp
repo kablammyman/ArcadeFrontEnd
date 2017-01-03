@@ -19,7 +19,7 @@ using namespace std;
 Menu::Menu(SDL_Renderer *r, std::vector<GameInfo> & items,int windowW, int windowH, string fontPath, int fontSize, SDL_Color textColor, SDL_Color backColor, SDL_Color edge )
 {
 	unsigned int rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
-	selectionDelay = 200; //selector can move only once per selectionDelay many ms
+	selectionDelay = 100; //selector can move only once per selectionDelay many ms
 	menuItems = items;
 	//make sure list is in alpha betical order
 	std::sort(items.begin(), items.end(), GameInfo::sortFn);

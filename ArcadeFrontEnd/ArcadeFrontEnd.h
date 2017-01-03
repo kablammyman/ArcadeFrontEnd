@@ -27,15 +27,25 @@ bool menuMode = true;
 //-----------------------------------------------------------------------------
 BOOL CALLBACK    EnumObjectsCallback(const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pContext);
 BOOL CALLBACK    EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pContext);
+BOOL CALLBACK	 EnumWindowsProc(HWND hwnd, LPARAM param);
+
+VOID CALLBACK WaitOrTimerCallback(_In_  PVOID lpParameter,_In_  BOOLEAN TimerOrWaitFired);
+
+void LaunchGame(string gameName);
+void LoadCurrentSnapshot();
+
+
 HRESULT InitDirectInput(HWND hDlg);
 VOID FreeDirectInput();
 HRESULT UpdateInputState();
 HWND mainWindowHandle;
+HWND mameWindowHandle;
 
 HANDLE mameProc = NULL;
 HANDLE mameHandle = NULL;
 
 Menu *mainMenu;
+SDL_Window *window;
 
 #define SAFE_DELETE(p)  { if(p) { delete (p);     (p)=nullptr; } }
 #define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=nullptr; } }
@@ -44,14 +54,17 @@ LPDIRECTINPUT8          g_pDI = nullptr;
 //need an array of these to check for button presses in game from all joysticks
 LPDIRECTINPUTDEVICE8    g_pJoystick = nullptr;
 
-#define VK_A 0x41
-#define VK_B 0x42
-#define VK_E 0x45
-#define VK_H 0x48
-#define VK_O 0x4F
-#define VK_R 0x52
-#define VK_S 0x53
-#define VK_W 0x57
+/*VK_LEFT	0x25
+VK_NUMPAD4	0x64
+
+VK_UP	0x26
+VK_NUMPAD8	0x68
+	
+VK_RIGHT	0x27
+VK_NUMPAD6	0x66
+
+VK_DOWN	0x28
+VK_NUMPAD2	0x62*/
 
 vector<GameInfo> AllGameListInfo;
 
@@ -78,27 +91,17 @@ callback(Uint32 interval, void *param)
 }
 SDL_TimerID inGameTimer, inputTimer, totalRuntime;
 
-//////////////////////direct input/////////////////////////
 struct DI_ENUM_CONTEXT
 {
 	DIJOYCONFIG* pPreferredJoyCfg;
 	bool bPreferredJoyCfgValid;
 };
 
-VOID CALLBACK WaitOrTimerCallback(
-	_In_  PVOID lpParameter,
-	_In_  BOOLEAN TimerOrWaitFired
-)
-{
-	//MessageBox(0, L"The process has exited.", L"INFO", MB_OK);
-	//SDL_RestoreWindow(window);
-	menuMode = true;
-	return;
-}
+
 //-----------------------------------------------------------------------------------------
-int SendKeyPressToProcess(void)
+void SendKeyPressToProcess(void)
 {
-	HWND hWnd = NULL;
+	/*HWND hWnd = NULL;
 	HWND hWndEdit = NULL;
 
 	hWnd = FindWindow(L"Notepad", NULL);
@@ -112,48 +115,39 @@ int SendKeyPressToProcess(void)
 	{
 		printf("Error: Can't find Notepad Edit, aborting\n");
 		return 0;
+	}*/
+
+	PostMessage(mameWindowHandle, WM_KEYDOWN, VK_LEFT, 1);
+	PostMessage(mameWindowHandle, WM_KEYUP, VK_LEFT, 1);
+	Sleep(100);
+	PostMessage(mameWindowHandle, WM_KEYDOWN, VK_RIGHT, 1);
+	PostMessage(mameWindowHandle, WM_KEYUP, VK_RIGHT, 1);
+	Sleep(100);
+	PostMessage(mameWindowHandle, WM_KEYDOWN, VK_LEFT, 1);
+	PostMessage(mameWindowHandle, WM_KEYUP, VK_LEFT, 1);
+
+	if (PostMessage(mameWindowHandle, WM_KEYDOWN, VK_RIGHT, 1) == 0)
+	{
+		int x = GetLastError();
+		printf("hello");
 	}
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_B, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_O, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_B, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_SPACE, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_W, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_A, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_S, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_SPACE, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_H, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_E, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_R, 1);
-	PostMessage(hWndEdit, WM_KEYDOWN, VK_E, 1);
-	return 0;
+
 }
 //-----------------------------------------------------------------------------------------
-void LoadCurrentSnapshot()
+
+
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM param)
 {
-	string gameName = mainMenu->GetCurrentSelectedItem();
-	
-	if(curSnap == gameName)
-		return;
-
-	SDL_Rect destRect = { 0,0,0,0 };
-
-	//clear the dest surface...this will be our border color
-	SDL_FillRect(SnapImgSurface, NULL, SDL_MapRGB(SnapImgSurface->format, 0,0,0));
-	string imgPath = CFGHelper::snapsPath +"\\"+ FileUtils::GetFileNameNoExt(gameName) +".png";
-	
-	SDL_Surface *temp = IMG_Load(imgPath.c_str());
-	if(temp == NULL)
-		return;
-
-	destRect.w = temp->w;
-	destRect.h = temp->h;
-	SDL_BlitSurface(temp, NULL, SnapImgSurface, &destRect);
-
-	//transfer the completed surface to the texture
-	SDL_UpdateTexture(SnapTexture, NULL, SnapImgSurface->pixels, SnapImgSurface->pitch);
-	
-	curSnap = gameName;
+	DWORD lpdwProcessId;
+	GetWindowThreadProcessId(hwnd, &lpdwProcessId);
+	if (lpdwProcessId == param)
+	{
+		mameWindowHandle = hwnd;
+		return FALSE;
+	}
+	return TRUE;
 }
+
 //-----------------------------------------------------------------------------------------
 bool myCreateProcess(string pathAndName, string args, HANDLE &processCreated)
 {
@@ -162,6 +156,7 @@ bool myCreateProcess(string pathAndName, string args, HANDLE &processCreated)
 
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
+	
 	ZeroMemory(&pi, sizeof(pi));
 	if (!
 		CreateProcessA(
@@ -171,8 +166,7 @@ bool myCreateProcess(string pathAndName, string args, HANDLE &processCreated)
 			CREATE_NEW_CONSOLE,
 			NULL, NULL,
 			&si,
-			&pi
-		)
+			&pi)
 		)
 	{
 		return false;
@@ -187,17 +181,73 @@ void LaunchGame(string gameName)
 {
 	//SDL_MinimizeWindow( window);
 	menuMode = false;
-	string n = FileUtils::GetFileNameNoExt(gameName);
+
 	string command = CFGHelper::mamePath;
-	string args = FileUtils::GetFileNameNoExt(gameName) + " -joystick";
+	//without the exe name as the first param, CreateProcess doesnt work right....CreateProcess allows you to override
+	//nornmal cmd behavior for some dumb ass reason!
+	string args = FileUtils::GetFileNameFromPathString(CFGHelper::mamePath) + " " + 
+		gameName + " -rp \"" +CFGHelper::romPath + "\" -inipath \"D:\emulators\mame 0149\" -joystick";
+
 	
-	myCreateProcess(command, args, mameProc);
+	myCreateProcess(command,args,  mameProc);
 	DWORD dwProcessID = GetProcessId(mameProc);
 	HANDLE hProcHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwProcessID);
+	
 
+	
 	RegisterWaitForSingleObject(&mameHandle, hProcHandle, WaitOrTimerCallback, NULL, INFINITE, WT_EXECUTEONLYONCE);
+	/*Sleep(500);
+	if (!EnumWindows(EnumWindowsProc, dwProcessID) && (GetLastError() == ERROR_SUCCESS)) {
+		//nopw that we have our main window, lets find child window
+		if (!EnumChildWindows(mameWindowHandle, EnumWindowsProc, 1111) && (GetLastError() == ERROR_SUCCESS))
+		{
+			printf("hello");
+		}
+	}
+	SendKeyPressToProcess();*/
+	
+
 }
 //-----------------------------------------------------------------------------------------
+void LoadCurrentSnapshot()
+{
+	string gameName = mainMenu->GetCurrentSelectedItem();
+
+	if (curSnap == gameName)
+		return;
+
+	SDL_Rect destRect = { 0,0,0,0 };
+
+	//clear the dest surface...this will be our border color
+	SDL_FillRect(SnapImgSurface, NULL, SDL_MapRGB(SnapImgSurface->format, 0, 0, 0));
+	string imgPath = CFGHelper::snapsPath + "\\" + FileUtils::GetFileNameNoExt(gameName) + ".png";
+
+	SDL_Surface *temp = IMG_Load(imgPath.c_str());
+	if (temp == NULL)
+		return;
+
+	destRect.w = temp->w;
+	destRect.h = temp->h;
+	SDL_BlitSurface(temp, NULL, SnapImgSurface, &destRect);
+
+	//transfer the completed surface to the texture
+	SDL_UpdateTexture(SnapTexture, NULL, SnapImgSurface->pixels, SnapImgSurface->pitch);
+
+	curSnap = gameName;
+}
+//-----------------------------------------------------------------------------------------
+VOID CALLBACK WaitOrTimerCallback(
+	_In_  PVOID lpParameter,
+	_In_  BOOLEAN TimerOrWaitFired
+)
+{
+	//MessageBox(0, L"The process has exited.", L"INFO", MB_OK);
+	SDL_RestoreWindow(window);
+	menuMode = true;
+	LoadCurrentSnapshot();
+	return;
+}
+
 HRESULT InitDirectInput(HWND hDlg)
 {
 	HRESULT hr;
@@ -391,6 +441,7 @@ HRESULT UpdateInputState()
 			menuMode = false;
 			//printf ("pushed button 1");
 			string gameName = mainMenu->GetCurrentSelectedItem();
+			//gameName+=".zip";
 			LaunchGame(gameName);
 			
 		}
@@ -496,7 +547,7 @@ void GenerateGameList(string mameListPath)
 }
 
 //-----------------------------------------------------------------------------------------
-void FillGameListFromCSV( bool verify = true)
+void FillGameListFromCSV( bool verify = false)
 {
 	ifstream masterList;
 
@@ -527,6 +578,8 @@ void FillGameListFromCSV( bool verify = true)
 				AllGameListInfo.push_back(newGame);
 			}
 		}
+		else
+			AllGameListInfo.push_back(newGame);
 	}
 	
 	masterList.close();
