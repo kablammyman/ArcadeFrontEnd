@@ -21,9 +21,7 @@ using namespace std;
 
 //http://cboard.cprogramming.com/windows-programming/111358-fake-keystrokes-another-process.html
 
-//Screen dimension constants
-int SCREEN_WIDTH = 640;
-int SCREEN_HEIGHT = 480;
+
 
 
 void handle_keys(SDL_Event* event, bool *quit)
@@ -116,7 +114,12 @@ int main(int argc, char* argv[])
 	mainWindowHandle = info.info.win.window;
 	InitDirectInput(mainWindowHandle);
 
-	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	unsigned int rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
+	SnapImgSurface = SDL_CreateRGBSurface(0, 500, 500, 32, rmask, gmask, bmask, amask);
+
+	//this pixel format is STRANGE! but its the one that works with the mame snaps...
+	SnapTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, 500, 500);
 
 	if (!FileUtils::DoesPathExist(CFGHelper::filePathBase + "\\gamelist.txt"))
 	{
@@ -141,16 +144,35 @@ int main(int argc, char* argv[])
 		TTF_Font* Sans = TTF_OpenFont(menuFontPath.c_str(), 36);
 		SDL_Color White = { 255, 255, 255 };
 		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, "Loading...", White);
-		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage); //now you can convert it into a texture
+		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage); 
+		 
 
+		/*string imgPath = CFGHelper::snapsPath + "\\" + "005.png";
+		SDL_Rect destRect = { 0,0,0,0 };
+		SDL_Surface *temp = IMG_Load(imgPath.c_str());
+		SDL_Texture* Img = SDL_CreateTextureFromSurface(renderer, temp);
+		destRect.w = temp->w;
+		destRect.h = temp->h;
+
+		SDL_FillRect(SnapImgSurface, NULL, 0x000000);
+		SDL_BlitSurface(temp, NULL, SnapImgSurface, NULL);
+		SDL_UpdateTexture(SnapTexture, NULL, SnapImgSurface->pixels, SnapImgSurface->pitch);
+		SDL_RenderCopy(renderer, SnapTexture, NULL, &destRect);*/
+
+		//SDL_RenderCopy(renderer, Img, NULL, &destRect);
+		
+		
 		SDL_Rect Message_rect; //create a rect
 		Message_rect.x = SCREEN_WIDTH /2 - surfaceMessage->w;
 		Message_rect.y = SCREEN_HEIGHT / 2;
 		Message_rect.w = surfaceMessage->w;
 		Message_rect.h = surfaceMessage->h;
 		SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
+		
+
 		SDL_RenderPresent(renderer);
 		FillGameListFromCSV();
+
 		SDL_FreeSurface(surfaceMessage);
 		SDL_DestroyTexture(Message);
 	}
@@ -158,18 +180,12 @@ int main(int argc, char* argv[])
 	
 	mainMenu = new Menu(renderer, AllGameListInfo, SCREEN_WIDTH, SCREEN_HEIGHT, menuFontPath, fontSize, SDL_Color{ 0,0,255 }, SDL_Color{ 255,255,255 }, SDL_Color{ 0,0,255 });
 	
-	SnapImgRect.x = mainMenu->GetMenuWidth() +50;
-	SnapImgRect.y = (SCREEN_HEIGHT /2) - (250);
+	SnapImgRect.x = mainMenu->GetMenuWidth() + 50;
+	SnapImgRect.y = (SCREEN_HEIGHT / 2) - (250);
 	SnapImgRect.w = 500;
 	SnapImgRect.h = 500;
 
-	unsigned int rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
-	SnapImgSurface = SDL_CreateRGBSurface(0, SnapImgRect.w, SnapImgRect.h, 32, rmask, gmask, bmask, amask);
-	SnapTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 500, 500);//;
 	LoadCurrentSnapshot();
-
-	
-	
 	
 	SDL_Event event;
 	bool done = false;
@@ -193,6 +209,8 @@ int main(int argc, char* argv[])
 	SDL_RemoveTimer(inGameTimer);
 	SDL_RemoveTimer(inputTimer);
 	SDL_RemoveTimer(totalRuntime);
+
+	SDL_DestroyTexture(SnapTexture);
 
 	SDL_DestroyWindow(window);
 	IMG_Quit();

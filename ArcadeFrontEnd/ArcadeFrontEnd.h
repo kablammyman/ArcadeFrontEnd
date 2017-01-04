@@ -44,8 +44,13 @@ HWND mameWindowHandle;
 HANDLE mameProc = NULL;
 HANDLE mameHandle = NULL;
 
+//Screen dimension constants
+int SCREEN_WIDTH = 640;
+int SCREEN_HEIGHT = 480;
+
 Menu *mainMenu;
 SDL_Window *window;
+SDL_Renderer *renderer;
 
 #define SAFE_DELETE(p)  { if(p) { delete (p);     (p)=nullptr; } }
 #define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=nullptr; } }
@@ -216,23 +221,19 @@ void LoadCurrentSnapshot()
 	if (curSnap == gameName)
 		return;
 
-	SDL_Rect destRect = { 0,0,0,0 };
-
-	//clear the dest surface...this will be our border color
-	SDL_FillRect(SnapImgSurface, NULL, SDL_MapRGB(SnapImgSurface->format, 0, 0, 0));
 	string imgPath = CFGHelper::snapsPath + "\\" + FileUtils::GetFileNameNoExt(gameName) + ".png";
-
+	
 	SDL_Surface *temp = IMG_Load(imgPath.c_str());
 	if (temp == NULL)
 		return;
 
-	destRect.w = temp->w;
-	destRect.h = temp->h;
-	SDL_BlitSurface(temp, NULL, SnapImgSurface, &destRect);
+	SDL_FillRect(SnapImgSurface, NULL, 0x000000);
+	SDL_BlitSurface(temp, NULL, SnapImgSurface, NULL);
 
 	//transfer the completed surface to the texture
 	SDL_UpdateTexture(SnapTexture, NULL, SnapImgSurface->pixels, SnapImgSurface->pitch);
 
+	SDL_FreeSurface(temp);	
 	curSnap = gameName;
 }
 //-----------------------------------------------------------------------------------------

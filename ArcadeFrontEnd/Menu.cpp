@@ -48,6 +48,9 @@ Menu::Menu(SDL_Renderer *r, std::vector<GameInfo> & items,int windowW, int windo
 	menuHeight = windowH - (menuFontHeight * 2);
 	numItemsToDisplay = float(menuHeight / menuFontHeight) - 1;
 
+	if(numItemsToDisplay > menuItems.size())
+		numItemsToDisplay = menuItems.size();
+
 	//SDL_QueryTexture(visibleMenuItemsTexture, NULL, NULL, &menuWidth, &menuHeight);
 	
 	visibleMenuRect = { 0,padding,menuWidth- padding,menuHeight- padding };
@@ -73,9 +76,13 @@ void Menu::FillVisibleMenu()
 
 	//clear the dest surface
 	SDL_FillRect(menuSurface, NULL, SDL_MapRGB(menuSurface->format, backgroundColor.r, backgroundColor.g, backgroundColor.b));
+	size_t numTitles = curMenuListIndex + numItemsToDisplay;
+	
+	if(numTitles > menuItems.size())
+		numTitles = menuItems.size();
 
 	//print the next X items inthe list onto the surface
-	for (size_t i = curMenuListIndex; i < curMenuListIndex + numItemsToDisplay; i++)
+	for (size_t i = curMenuListIndex; i < numTitles; i++)
 	{
 		SDL_Surface *temp = TTF_RenderText_Solid(menuFont, menuItems[i].name.c_str(), menuTextColor);
 		destRect.y = curYPos;
@@ -103,11 +110,12 @@ void Menu::Next(unsigned delay)
 	
 	curTime = delay;
 
-	if(curSlectedItem <numItemsToDisplay-1)
+	if(curSlectedItem < numItemsToDisplay-1)
 		curSlectedItem++;
 	else
 	{
-		if (curMenuListIndex < menuItems.size() - 1)
+		int listEnd = float(menuItems.size() / numItemsToDisplay)-1;
+		if (curMenuListIndex < listEnd)
 		{
 			curMenuListIndex++;
 			FillVisibleMenu();
@@ -160,7 +168,12 @@ void Menu::SkipToLetter(char letter)
 //---------------------------------------------------------------------------------------
 std::string Menu::GetCurrentSelectedItem()
 {
-	return menuItems[curSlectedItem + curMenuListIndex].romName;
+	size_t index = curSlectedItem + curMenuListIndex;
+	
+	if(index > menuItems.size()-1)
+		index = menuItems.size()-1;
+
+	return menuItems[index].romName;
 }
 //---------------------------------------------------------------------------------------
 void Menu::Draw()
