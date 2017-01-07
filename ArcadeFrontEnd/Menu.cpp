@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Menu.h"
 #include <algorithm>    // std::binary_search, std::sort
-
+#include <time.h>
 /*#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 rmask = 0xff000000;
 gmask = 0x00ff0000;
@@ -18,6 +18,7 @@ using namespace std;
 
 Menu::Menu(SDL_Renderer *r, std::vector<GameInfo> & items,int windowW, int windowH, string fontPath, int fontSize, SDL_Color textColor, SDL_Color backColor, SDL_Color edge )
 {
+	srand(time(0));
 	unsigned int rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
 	selectionDelay = 100; //selector can move only once per selectionDelay many ms
 	menuItems = items;
@@ -143,6 +144,25 @@ void Menu::Prev(unsigned delay)
 		}
 		curSlectedItem = 0;
 	}
+	PositionSelector();
+}
+//---------------------------------------------------------------------------------------
+void Menu::SelectRandomGame()
+{
+	int max = menuItems.size();
+	if (max - 0 == 1)
+		curSlectedItem = (1 + rand() % 10) > 5 ? 1 : 0;
+
+	else
+		curSlectedItem = (((max + 1) * rand()) / RAND_MAX);
+	
+	int listEnd = float(max / numItemsToDisplay) - 1;
+	if (curMenuListIndex < listEnd)
+	{
+		curMenuListIndex++;
+		FillVisibleMenu();
+	}
+	
 	PositionSelector();
 }
 //---------------------------------------------------------------------------------------

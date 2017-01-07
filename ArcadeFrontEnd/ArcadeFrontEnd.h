@@ -33,7 +33,10 @@ VOID CALLBACK WaitOrTimerCallback(_In_  PVOID lpParameter,_In_  BOOLEAN TimerOrW
 
 void LaunchGame(string gameName);
 void LoadCurrentSnapshot();
-
+unsigned int lastButtonPressTime;
+unsigned int buttonPressTimeout = 30000;//should be 5 minutes
+void ResetButtonPressTimer();
+bool IsButtonTimeUp();
 
 HRESULT InitDirectInput(HWND hDlg);
 VOID FreeDirectInput();
@@ -44,13 +47,6 @@ HWND mameWindowHandle;
 HANDLE mameProc = NULL;
 HANDLE mameHandle = NULL;
 
-//Screen dimension constants
-int SCREEN_WIDTH = 640;
-int SCREEN_HEIGHT = 480;
-
-Menu *mainMenu;
-SDL_Window *window;
-SDL_Renderer *renderer;
 
 #define SAFE_DELETE(p)  { if(p) { delete (p);     (p)=nullptr; } }
 #define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=nullptr; } }
@@ -59,24 +55,24 @@ LPDIRECTINPUT8          g_pDI = nullptr;
 //need an array of these to check for button presses in game from all joysticks
 LPDIRECTINPUTDEVICE8    g_pJoystick = nullptr;
 
-/*VK_LEFT	0x25
-VK_NUMPAD4	0x64
-
-VK_UP	0x26
-VK_NUMPAD8	0x68
-	
-VK_RIGHT	0x27
-VK_NUMPAD6	0x66
-
-VK_DOWN	0x28
-VK_NUMPAD2	0x62*/
-
 vector<GameInfo> AllGameListInfo;
+
+Menu *mainMenu;
+SDL_Window *window;
+SDL_Renderer *renderer;
 
 SDL_Surface *SnapImgSurface = NULL;
 SDL_Rect SnapImgRect;
 SDL_Texture *SnapTexture = NULL;
 string curSnap = "";
+
+//Screen dimension constants
+int SCREEN_WIDTH = 640;
+int SCREEN_HEIGHT = 480;
+int joyY;
+int joyX;
+bool isIdle = false;
+
 
 /////////////timer stuff///////////////////
 #define DEFAULT_RESOLUTION  1
@@ -86,6 +82,24 @@ ticktock(Uint32 interval, void *param)
 {
 	++ticks;
 	return (interval);
+}
+
+
+void ResetButtonPressTimer()
+{
+	lastButtonPressTime = SDL_GetTicks();
+	isIdle = false;
+}
+
+
+bool IsButtonTimeUp()
+{
+	if (SDL_GetTicks() - lastButtonPressTime > buttonPressTimeout)
+	{
+		isIdle = true;
+		return true;
+	}
+	return false;
 }
 
 static Uint32 SDLCALL
@@ -102,45 +116,7 @@ struct DI_ENUM_CONTEXT
 	bool bPreferredJoyCfgValid;
 };
 
-
 //-----------------------------------------------------------------------------------------
-void SendKeyPressToProcess(void)
-{
-	/*HWND hWnd = NULL;
-	HWND hWndEdit = NULL;
-
-	hWnd = FindWindow(L"Notepad", NULL);
-	if (hWnd == NULL)
-	{
-		printf("Error: Can't find Notepad, aborting\n");
-		return 0;
-	}
-	hWndEdit = FindWindowEx(hWnd, NULL, L"Edit", NULL);
-	if (hWndEdit == NULL)
-	{
-		printf("Error: Can't find Notepad Edit, aborting\n");
-		return 0;
-	}*/
-
-	PostMessage(mameWindowHandle, WM_KEYDOWN, VK_LEFT, 1);
-	PostMessage(mameWindowHandle, WM_KEYUP, VK_LEFT, 1);
-	Sleep(100);
-	PostMessage(mameWindowHandle, WM_KEYDOWN, VK_RIGHT, 1);
-	PostMessage(mameWindowHandle, WM_KEYUP, VK_RIGHT, 1);
-	Sleep(100);
-	PostMessage(mameWindowHandle, WM_KEYDOWN, VK_LEFT, 1);
-	PostMessage(mameWindowHandle, WM_KEYUP, VK_LEFT, 1);
-
-	if (PostMessage(mameWindowHandle, WM_KEYDOWN, VK_RIGHT, 1) == 0)
-	{
-		int x = GetLastError();
-		printf("hello");
-	}
-
-}
-//-----------------------------------------------------------------------------------------
-
-
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM param)
 {
 	DWORD lpdwProcessId;
@@ -201,16 +177,14 @@ void LaunchGame(string gameName)
 
 	
 	RegisterWaitForSingleObject(&mameHandle, hProcHandle, WaitOrTimerCallback, NULL, INFINITE, WT_EXECUTEONLYONCE);
-	/*Sleep(500);
+	Sleep(500);
 	if (!EnumWindows(EnumWindowsProc, dwProcessID) && (GetLastError() == ERROR_SUCCESS)) {
 		//nopw that we have our main window, lets find child window
-		if (!EnumChildWindows(mameWindowHandle, EnumWindowsProc, 1111) && (GetLastError() == ERROR_SUCCESS))
+		if (!EnumChildWindows(mameWindowHandle, EnumWindowsProc, 0) && (GetLastError() == ERROR_SUCCESS))
 		{
 			printf("hello");
 		}
 	}
-	SendKeyPressToProcess();*/
-	
 
 }
 //-----------------------------------------------------------------------------------------
@@ -248,7 +222,7 @@ VOID CALLBACK WaitOrTimerCallback(
 	LoadCurrentSnapshot();
 	return;
 }
-
+//-----------------------------------------------------------------------------------------
 HRESULT InitDirectInput(HWND hDlg)
 {
 	HRESULT hr;
@@ -314,6 +288,8 @@ HRESULT InitDirectInput(HWND hDlg)
 	if (FAILED(hr = g_pJoystick->EnumObjects(EnumObjectsCallback,
 		(VOID*)hDlg, DIDFT_ALL)))
 		return hr;
+
+	ResetButtonPressTimer();
 
 	return S_OK;
 }
@@ -423,15 +399,33 @@ HRESULT UpdateInputState()
 	if (FAILED(hr = g_pJoystick->GetDeviceState(sizeof(DIJOYSTATE2), &js)))
 		return hr; // The device should have been acquired during the Poll()
 	
+	joyY = js.lY;
+	joyX = js.lX;
+
+	if (joyY > 100 || joyY < -100 || joyX < -100 || joyX < -100)
+		ResetButtonPressTimer();
+
+	for (int i = 0; i < 128; i++)
+	{
+		if (js.rgbButtons[i] & 0x80)
+		{
+			ResetButtonPressTimer();
+		}
+	}
+
+	if (IsButtonTimeUp() && !menuMode)
+	{
+		SendMessage(mameWindowHandle, WM_CLOSE, 0, 0);
+	}
 
 	if (menuMode)
 	{
-		if (js.lY > 100)
+		if (joyY > 100)
 		{
 			mainMenu->Next(SDL_GetTicks());
 			LoadCurrentSnapshot();
 		}
-		else if (js.lY < -100)
+		else if (joyY < -100)
 		{
 			mainMenu->Prev(SDL_GetTicks());
 			LoadCurrentSnapshot();
@@ -439,8 +433,9 @@ HRESULT UpdateInputState()
 		
 		if (js.rgbButtons[0] & 0x80)
 		{
+			ResetButtonPressTimer();
 			menuMode = false;
-			//printf ("pushed button 1");
+			mainMenu->SelectRandomGame();
 			string gameName = mainMenu->GetCurrentSelectedItem();
 			//gameName+=".zip";
 			LaunchGame(gameName);
@@ -451,14 +446,19 @@ HRESULT UpdateInputState()
 		{
 			//this will be the back\cancel button
 		}
+
+		//select a new random game
+		if (isIdle)
+		{
+			ResetButtonPressTimer();
+			menuMode = false;
+			mainMenu->SelectRandomGame();
+			string gameName = mainMenu->GetCurrentSelectedItem();
+			LaunchGame(gameName);
+		}
 	}
-	//we are in the game, lets keep track of button presses
-	else
-	{
 
-	}
-
-
+	
 	return S_OK;
 }
 

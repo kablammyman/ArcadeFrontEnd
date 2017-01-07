@@ -86,8 +86,8 @@ int main(int argc, char* argv[])
 		SDL_WINDOWPOS_UNDEFINED,           // initial y position
 		SCREEN_WIDTH,                               // width, in pixels
 		SCREEN_HEIGHT,                               // height, in pixels
-		SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE
-		//SDL_WINDOW_RESIZABLE
+		//SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE
+		SDL_WINDOW_RESIZABLE
 		);
 	// Check that the window was successfully created
 	if (window == NULL) {
