@@ -38,7 +38,7 @@ void handle_keys(SDL_Event* event, bool *quit)
 	{
 		if (event->key.keysym.sym == SDLK_e)
 		{
-			string gameName = mainMenu->GetCurrentSelectedItem();
+			string gameName = mainMenu->GetCurrentSelectedItemRomName();
 			LaunchGame(gameName);
 			//printf("test");
 			//mainMenu->SkipToLetter('7');
@@ -64,9 +64,25 @@ int main(int argc, char* argv[])
 	CFGHelper::filePathBase = CFGHelper::SetProgramPath(argv[0]);
 	CFGHelper::LoadCFGFile();
 	
-	//vector<string> romList = FileUtils::GetAllFileNamesInDir(CFGHelper::romPath, "zip");
-
+	string dbOut;
+	string tableName = "Arcade";
+	db.openSQLiteDB(CFGHelper::dbPath, dbOut);
+	//check to see if we are making a new db table or we have an existing one
+	db.executeSQL("pragma schema_version",dbOut);
+	if (db.GetDataFromSingleLineOutput(dbOut) == "0")
+	{
+		//brand new file, create the db
+		string create = "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,romName TEXT ,name TEXT,year TEXT, manufacturer TEXT,numCredits INTEGER,totalPlayTime INTEGER,lastPlayedDate TEXT, numSelectedRandom INTEGER,numSelectedManually INTEGER";
+		if (!db.createTable(tableName, create))
+		{
+			MessageBox(NULL, L"cant create db", L"couldnt create teh db for your stats", MB_OK);
+			exit(0);
+		}
+	}
+	else
+		db.setTableName(tableName);
 	
+
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 	IMG_Init(IMG_INIT_PNG);
@@ -186,17 +202,22 @@ int main(int argc, char* argv[])
 	SnapImgRect.h = 500;
 
 	LoadCurrentSnapshot();
-	
+	ResetButtonPressTimer();
+
 	SDL_Event event;
 	bool done = false;
 	while (!done)
 	{
 		UpdateInputState();
-		// Poll for events 
+		
 		while (SDL_PollEvent(&event)) 
 		{
 			handle_keys(&event, &done);
 		}
+
+
+		LogicUpdate();
+
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, SnapTexture, NULL, &SnapImgRect);

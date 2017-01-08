@@ -18,7 +18,7 @@ using namespace std;
 
 Menu::Menu(SDL_Renderer *r, std::vector<GameInfo> & items,int windowW, int windowH, string fontPath, int fontSize, SDL_Color textColor, SDL_Color backColor, SDL_Color edge )
 {
-	srand(time(0));
+	srand((unsigned int)time(0));
 	unsigned int rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
 	selectionDelay = 100; //selector can move only once per selectionDelay many ms
 	menuItems = items;
@@ -45,12 +45,12 @@ Menu::Menu(SDL_Renderer *r, std::vector<GameInfo> & items,int windowW, int windo
 	menuFontHeight = TTF_FontLineSkip(menuFont);
 
 	//calc menu dims
-	menuWidth = float(windowW / 3);
-	menuHeight = windowH - (menuFontHeight * 2);
-	numItemsToDisplay = float(menuHeight / menuFontHeight) - 1;
+	menuWidth = (int)float(windowW / 3);
+	menuHeight = windowH - (int)(menuFontHeight * 2);
+	numItemsToDisplay = (int)float(menuHeight / menuFontHeight) - 1;
 
-	if(numItemsToDisplay > menuItems.size())
-		numItemsToDisplay = menuItems.size();
+	if(numItemsToDisplay > (int)menuItems.size())
+		numItemsToDisplay = (int)menuItems.size();
 
 	//SDL_QueryTexture(visibleMenuItemsTexture, NULL, NULL, &menuWidth, &menuHeight);
 	
@@ -115,7 +115,7 @@ void Menu::Next(unsigned delay)
 		curSlectedItem++;
 	else
 	{
-		int listEnd = float(menuItems.size() / numItemsToDisplay)-1;
+		int listEnd = (int)float(menuItems.size() / numItemsToDisplay)-1;
 		if (curMenuListIndex < listEnd)
 		{
 			curMenuListIndex++;
@@ -149,14 +149,15 @@ void Menu::Prev(unsigned delay)
 //---------------------------------------------------------------------------------------
 void Menu::SelectRandomGame()
 {
-	int max = menuItems.size();
+	int max = (int)menuItems.size()-1;
 	if (max - 0 == 1)
 		curSlectedItem = (1 + rand() % 10) > 5 ? 1 : 0;
 
 	else
 		curSlectedItem = (((max + 1) * rand()) / RAND_MAX);
 	
-	int listEnd = float(max / numItemsToDisplay) - 1;
+
+	int listEnd = (int)float(max / numItemsToDisplay) - 1;
 	if (curMenuListIndex < listEnd)
 	{
 		curMenuListIndex++;
@@ -176,7 +177,7 @@ void Menu::SkipToLetter(char letter)
 		if (menuItems[i].name[0] == letter)
 		{
 			curSlectedItem = 0;
-			curMenuListIndex = i;
+			curMenuListIndex = (int)i;
 			FillVisibleMenu();
 			PositionSelector();
 			curLetter = letter;
@@ -186,7 +187,7 @@ void Menu::SkipToLetter(char letter)
 	//if we get here, there are no roms starting with the letter specified
 }
 //---------------------------------------------------------------------------------------
-std::string Menu::GetCurrentSelectedItem()
+std::string Menu::GetCurrentSelectedItemRomName()
 {
 	size_t index = curSlectedItem + curMenuListIndex;
 	
@@ -194,6 +195,16 @@ std::string Menu::GetCurrentSelectedItem()
 		index = menuItems.size()-1;
 
 	return menuItems[index].romName;
+}
+//---------------------------------------------------------------------------------------
+GameInfo Menu::GetCurrentSelectedItem()
+{
+	size_t index = curSlectedItem + curMenuListIndex;
+
+	if (index > menuItems.size() - 1)
+		index = menuItems.size() - 1;
+
+	return menuItems[index];
 }
 //---------------------------------------------------------------------------------------
 void Menu::Draw()

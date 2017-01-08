@@ -13,6 +13,7 @@ struct GameInfo
 	std::string romName;
 	std::string manufacturer;
 	std::string year;
+	
 
 	static bool sortFn(GameInfo &i, GameInfo &j) { return (i.name<j.name); }
 };
@@ -52,7 +53,8 @@ public:
 	Menu(SDL_Renderer *r, std::vector<GameInfo> & items,int windowW, int windowH, std::string fontPath, int fontSize, SDL_Color textColor, SDL_Color backColor, SDL_Color edge);
 	~Menu();
 	
-	std::string GetCurrentSelectedItem();
+	GameInfo GetCurrentSelectedItem();
+	std::string Menu::GetCurrentSelectedItemRomName();
 	void Draw();
 	void Next(unsigned delay = 0);
 	void Prev(unsigned delay = 0);

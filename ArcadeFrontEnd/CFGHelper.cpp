@@ -9,6 +9,7 @@ string CFGHelper::romPath;
 string CFGHelper::mameList;
 string CFGHelper::mamePath;
 string CFGHelper::snapsPath;
+string CFGHelper::mameini;
 vector<string> CFGHelper::attractPlayList;
 
 
@@ -47,20 +48,22 @@ bool CFGHelper::LoadCFGFile(string programBasePath)
 	}
 
 	dbPath = CFGUtils::GetCfgStringValue("DBPath");
+	if (dbPath == "")
+	{
+		dbPath = CFGHelper::filePathBase + "\\ArcadeFrontend.db";
+	}
+
 	mameList = CFGUtils::GetCfgStringValue("MAMELIST");
 	romPath = CFGUtils::GetCfgStringValue("ROMS");
 	mamePath = CFGUtils::GetCfgStringValue("MAME");
+	mameini = CFGUtils::GetCfgStringValue("MAMEINI");
 	snapsPath = CFGUtils::GetCfgStringValue("SNAP");
 	return true;
 }
 //check to make sure everything loaded
 bool CFGHelper::IsCFGComplete(string &err)
 {
-	if (dbPath == "")
-	{
-		err = "dbPath is missing in the cfg";
-		return false;
-	}
+	
 	if (romPath == "")
 	{
 		err = "rom path is missing in the cfg";
@@ -69,6 +72,11 @@ bool CFGHelper::IsCFGComplete(string &err)
 	if (mamePath == "")
 	{
 		err = "mamePath is missing in the cfg";
+		return false;
+	}
+	if (mameini == "")
+	{
+		err = "mame ini path is missing in the cfg";
 		return false;
 	}
 	

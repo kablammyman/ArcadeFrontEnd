@@ -15,6 +15,8 @@ public:
 	static string snapsPath;
 	static string mamePath;
 	static string mameList;
+	static string mameini;
+
 	static vector<string> attractPlayList;
 
 	static bool LoadCFGFile(string programBasePath = "");
