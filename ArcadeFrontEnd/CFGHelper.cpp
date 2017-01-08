@@ -10,6 +10,7 @@ string CFGHelper::mameList;
 string CFGHelper::mamePath;
 string CFGHelper::snapsPath;
 string CFGHelper::mameini;
+string CFGHelper::catverPath;
 vector<string> CFGHelper::attractPlayList;
 
 
@@ -57,7 +58,9 @@ bool CFGHelper::LoadCFGFile(string programBasePath)
 	romPath = CFGUtils::GetCfgStringValue("ROMS");
 	mamePath = CFGUtils::GetCfgStringValue("MAME");
 	mameini = CFGUtils::GetCfgStringValue("MAMEINI");
-	snapsPath = CFGUtils::GetCfgStringValue("SNAP");
+	snapsPath = CFGUtils::GetCfgStringValue("SNAP"); 
+	catverPath = CFGUtils::GetCfgStringValue("CATVER");
+	
 	return true;
 }
 //check to make sure everything loaded

@@ -64,25 +64,25 @@ int main(int argc, char* argv[])
 	CFGHelper::filePathBase = CFGHelper::SetProgramPath(argv[0]);
 	CFGHelper::LoadCFGFile();
 	
+	bool populateDB = false;
 	string dbOut;
-	string tableName = "Arcade";
+	
 	db.openSQLiteDB(CFGHelper::dbPath, dbOut);
 	//check to see if we are making a new db table or we have an existing one
 	db.executeSQL("pragma schema_version",dbOut);
 	if (db.GetDataFromSingleLineOutput(dbOut) == "0")
 	{
 		//brand new file, create the db
-		string create = "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,romName TEXT ,name TEXT,year TEXT, manufacturer TEXT,numCredits INTEGER,totalPlayTime INTEGER,lastPlayedDate TEXT, numSelectedRandom INTEGER,numSelectedManually INTEGER";
+		string create = "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,romName TEXT ,name TEXT,year TEXT, manufacturer TEXT,genre TEXT,numCredits INTEGER,totalPlayTime INTEGER,lastPlayedDate TEXT, numSelectedRandom INTEGER,numSelectedManually INTEGER";
 		if (!db.createTable(tableName, create))
 		{
 			MessageBox(NULL, L"cant create db", L"couldnt create teh db for your stats", MB_OK);
 			exit(0);
 		}
+		populateDB = true;
 	}
 	else
 		db.setTableName(tableName);
-	
-
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 	IMG_Init(IMG_INIT_PNG);
@@ -137,11 +137,11 @@ int main(int argc, char* argv[])
 	//this pixel format is STRANGE! but its the one that works with the mame snaps...
 	SnapTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, 500, 500);
 
-	if (!FileUtils::DoesPathExist(CFGHelper::filePathBase + "\\gamelist.txt"))
+	if (populateDB)
 	{
 		TTF_Font* Sans = TTF_OpenFont(menuFontPath.c_str(), 36); 
 		SDL_Color White = { 255, 255, 255 }; 
-		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, "Cant find your game list, Generating it now...please wait", White);
+		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, "Cant find your game database, Generating it now...please wait", White);
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage); //now you can convert it into a texture
 
 		SDL_Rect Message_rect; //create a rect
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
 		Message_rect.h = surfaceMessage->h;
 		SDL_RenderCopy(renderer, Message, NULL, &Message_rect); 
 		SDL_RenderPresent(renderer);
-		GenerateGameList(CFGHelper::mameList);
+		GenerateGameList(CFGHelper::mameList,CFGHelper::catverPath);
 		SDL_FreeSurface(surfaceMessage);
 		SDL_DestroyTexture(Message);
 	}
@@ -187,8 +187,10 @@ int main(int argc, char* argv[])
 		
 
 		SDL_RenderPresent(renderer);
+		
 		FillGameListFromCSV();
 
+		
 		SDL_FreeSurface(surfaceMessage);
 		SDL_DestroyTexture(Message);
 	}

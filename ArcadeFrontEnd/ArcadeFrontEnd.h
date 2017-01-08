@@ -65,7 +65,7 @@ string curSnap = "";
 int SCREEN_WIDTH = 640;
 int SCREEN_HEIGHT = 480;
 bool isIdle = false;
-
+const string tableName = "Arcade";
 
 /////////////timer stuff///////////////////
 #define DEFAULT_RESOLUTION  1
@@ -264,18 +264,45 @@ void LogicUpdate()
 		}
 	}
 }
-void GenerateGameList(string mameListPath)
-{
-	ofstream masterList;
-	ifstream mameList;
 
-	masterList.open(CFGHelper::filePathBase + "\\gamelist.txt");
-	mameList.open(mameListPath);
+//do this on first start up....or if you cant find the DB
+void GenerateGameList(string mameListPath,string catverListPath)
+{
 	string line;
+	ifstream catverList;
+	vector<SQLiteUtils::dbDataPair> catver;
+	//only do this if we have a catver to read from, otherwise skip
+	if (!catverListPath.empty())
+	{
+		catverList.open(catverListPath);
+		
+		while (getline(catverList, line))
+		{
+			//we got to theend of cat listing
+			if(line.find("[VerAdded]") != string::npos)
+				break;
+			SQLiteUtils::dbDataPair pair;
+			vector<string> temp =StringUtils::Tokenize(line, "=");
+
+			//we only want the game data, no headers or anything else
+			if(temp.size() <= 1)
+				continue;
+
+			pair.first = temp[0];
+			pair.second = temp[1];
+
+			catver.push_back(pair);
+		}
+		catverList.close();
+	}
+	ifstream mameList;
+	mameList.open(mameListPath);
+	
 	string name;
 	string romName;
 	string manufacturer;
 	string year;
+	size_t lastIndexUsed = 0;
 
 	if (mameList.is_open())
 	{
@@ -314,18 +341,51 @@ void GenerateGameList(string mameListPath)
 				newGame.name = name;
 				newGame.manufacturer = manufacturer;
 				newGame.year = year;
+
 				string romPath = CFGHelper::romPath +"\\"+ romName+".zip";
 				if (FileUtils::DoesPathExist(romPath))
 				{
+					string output;
+					vector<SQLiteUtils::dbDataPair> newGameInfo;
+					newGameInfo.push_back(make_pair("romName", romName));
+					newGameInfo.push_back(make_pair("name", name));
+					newGameInfo.push_back(make_pair("manufacturer", manufacturer));
+					newGameInfo.push_back(make_pair("year", year));
+					newGameInfo.push_back(make_pair("numSelectedRandom", "0"));
+					newGameInfo.push_back(make_pair("numSelectedManually", "0"));
+					newGameInfo.push_back(make_pair("totalPlayTime", "0"));
+					newGameInfo.push_back(make_pair("numCredits", "0"));
+					
+					if (catver.size() > 0)
+					{
+						//since both list are sorted, we can prob march thru the array in a smart way to find if a game exists
+						for (size_t i = lastIndexUsed; i < catver.size(); i++)
+						{
+							if (catver[i].first == romName)
+							{
+								newGameInfo.push_back(make_pair("genre", catver[i].second));
+								newGame.genre = catver[i].second;
+								lastIndexUsed = i;
+								break;
+							}
+							else if (catver[i].first[0] > romName[0])
+							{
+								//prob not in the list
+								break;
+							}
+						}
+					}
+					db.insertNewDataEntry(newGameInfo, output);
+
+					newGame.id = db.GetLatestID();
 					AllGameListInfo.push_back(newGame);
-					//have to use semi colons since some game names contians commas
-					masterList << romName << ";" << name << ";" << manufacturer << ";" << year << endl;
+					
 				}
 			}
 			
 		}
 		mameList.close();
-		masterList.close();
+
 	}
 	else
 	{
@@ -337,30 +397,30 @@ void GenerateGameList(string mameListPath)
 //-----------------------------------------------------------------------------------------
 void FillGameListFromCSV( bool verify = false)
 {
-	ifstream masterList;
+	string output;
+	string querey = "id,romName,name,manufacturer,year,genre";
+	db.doDBQuerey(querey, output);
+	vector<string> allGames;
+	db.SplitDataIntoResults(allGames, output, "ID",false);
 
-	masterList.open(CFGHelper::filePathBase + "\\gamelist.txt");
-
-	string line;
-
-	if (!masterList.is_open())
-	{
-		MessageBox(NULL, L"cant find game list", L"cant find your game list, restart this to have it auto generate", MB_OK);
-		exit(0);
-	}
-	while (getline(masterList, line))
+	for(size_t i = 0; i < allGames.size(); i++)
 	{
 
 		GameInfo newGame;
-		vector<string> tokens = StringUtils::Tokenize(line,";");
-		newGame.romName = tokens[0];
-		newGame.name = tokens[1];
-		newGame.manufacturer = tokens[2];
-		newGame.year = tokens[3];
-		string romPath = CFGHelper::romPath + "\\" + newGame.romName + ".zip";
+		vector<string> tokens = StringUtils::Tokenize(allGames[i],"\n");
+		newGame.id = atoi(db.GetDataFromSingleLineOutput(tokens[0]).c_str());
+		newGame.romName = db.GetDataFromSingleLineOutput(tokens[1]);
+		newGame.name = db.GetDataFromSingleLineOutput(tokens[2]);
+		newGame.manufacturer = db.GetDataFromSingleLineOutput(tokens[3]);
+		newGame.year = db.GetDataFromSingleLineOutput(tokens[4]);
+		
+		if (tokens.size() >= 5)
+			newGame.genre = db.GetDataFromSingleLineOutput(tokens[5]);
+
 		
 		if (verify)
 		{
+			string romPath = CFGHelper::romPath + "\\" + newGame.romName + ".zip";
 			if (FileUtils::DoesPathExist(romPath))
 			{
 				AllGameListInfo.push_back(newGame);
@@ -369,8 +429,6 @@ void FillGameListFromCSV( bool verify = false)
 		else
 			AllGameListInfo.push_back(newGame);
 	}
-	
-	masterList.close();
 }
 //-----------------------------------------------------------------------------------------
 void WriteDBInfo()
@@ -443,4 +501,83 @@ int mainExample2(int argc, char **argv)
 	hDesktopWindow = GetDesktopWindow();
 	ListChildWindows(hDesktopWindow, atoi(argv[1]));
 	return 0;
+}
+
+//-----------------------------------------------------------------------------------------
+bool IsStringInVector(vector<string> & list, string keyword)
+{
+	for (size_t i = 0; i < list.size(); i++)
+	{
+		size_t pos = list[i].find(keyword);
+			if(pos != string::npos)
+				return true;
+	}
+	return false;
+}
+void RemoveCrappyROMS(bool deleteZip = false)
+{
+	string output;
+	string querey = "id,romName,name,manufacturer,year,genre";
+	db.doDBQuerey(querey, output);
+	vector<string> allGames;
+	db.SplitDataIntoResults(allGames, output, "ID", false);
+
+	vector<string> badManufacturer;
+	badManufacturer.push_back("Stern");
+	badManufacturer.push_back("Igrosoft");
+	badManufacturer.push_back("IGT - International Gaming Technology");
+	badManufacturer.push_back("bootleg");
+	
+	vector<string> badGenre;
+	badGenre.push_back("Casino");
+	badGenre.push_back("Electromechanical");
+	badGenre.push_back("Quiz");
+	badGenre.push_back("Mahjong");
+	badGenre.push_back("Tabletop");
+	
+	for (size_t i = 0; i < allGames.size(); i++)
+	{
+		bool deleteRom = false;
+		GameInfo newGame;
+		vector<string> tokens = StringUtils::Tokenize(allGames[i], "\n");
+		newGame.id = atoi(db.GetDataFromSingleLineOutput(tokens[0]).c_str());
+		newGame.romName = db.GetDataFromSingleLineOutput(tokens[1]);
+		newGame.name = db.GetDataFromSingleLineOutput(tokens[2]);
+		newGame.manufacturer = db.GetDataFromSingleLineOutput(tokens[3]);
+		newGame.year = db.GetDataFromSingleLineOutput(tokens[4]);
+
+		if (tokens.size() >= 5)
+		{
+			newGame.genre = db.GetDataFromSingleLineOutput(tokens[5]);
+			vector<string> temp = StringUtils::Tokenize(newGame.genre,"/");
+			StringUtils::TrimWhiteSpace(temp[0]);
+			if (IsStringInVector(badGenre, temp[0]))
+				deleteRom = true;
+			else if (temp.size() > 1)
+			{
+				StringUtils::TrimWhiteSpace(temp[1]);
+				if (IsStringInVector(badGenre, temp[1]))
+					deleteRom = true;
+			}
+		}
+		
+		if (IsStringInVector(badManufacturer, newGame.manufacturer))
+			deleteRom = true;
+		
+		if (deleteRom)
+		{
+			string querey = "DELETE FROM " + tableName + " WHERE ID = " + to_string(newGame.id);
+			string out;
+			db.executeSQL(querey,out);
+
+			if (deleteZip)
+			{
+				string romPath = CFGHelper::romPath + "\\" + newGame.romName + ".zip";
+				if (FileUtils::DoesPathExist(romPath))
+				{
+					FileUtils::Delete_File(romPath);
+				}
+			}
+		}
+	}
 }

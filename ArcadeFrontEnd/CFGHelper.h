@@ -16,7 +16,7 @@ public:
 	static string mamePath;
 	static string mameList;
 	static string mameini;
-
+	static string catverPath;
 	static vector<string> attractPlayList;
 
 	static bool LoadCFGFile(string programBasePath = "");

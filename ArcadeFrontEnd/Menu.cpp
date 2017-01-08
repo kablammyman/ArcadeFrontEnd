@@ -115,7 +115,7 @@ void Menu::Next(unsigned delay)
 		curSlectedItem++;
 	else
 	{
-		int listEnd = (int)float(menuItems.size() / numItemsToDisplay)-1;
+		int listEnd = (int)float(menuItems.size() - numItemsToDisplay)-1;
 		if (curMenuListIndex < listEnd)
 		{
 			curMenuListIndex++;
