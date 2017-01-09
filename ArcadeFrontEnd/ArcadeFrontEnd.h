@@ -5,6 +5,7 @@
 
 #include <string>
 #include "Menu.h"
+#include "SnapShot.h"
 #include "CFGHelper.h"
 #include "FileUtils.h"
 #include "StringUtils.h"
@@ -25,7 +26,7 @@ BOOL CALLBACK	 EnumWindowsProc(HWND hwnd, LPARAM param);
 VOID CALLBACK WaitOrTimerCallback(_In_  PVOID lpParameter,_In_  BOOLEAN TimerOrWaitFired);
 
 void LaunchGame(string gameName);
-void LoadCurrentSnapshot();
+
 void WriteDBInfo();
 
 unsigned int lastButtonPressTime;
@@ -53,13 +54,12 @@ GameInfo curGameStats;
 SQLiteUtils db;
 
 Menu *mainMenu;
+SnapShot *snaps;
+
 SDL_Window *window;
 SDL_Renderer *renderer;
 
-SDL_Surface *SnapImgSurface = NULL;
-SDL_Rect SnapImgRect;
-SDL_Texture *SnapTexture = NULL;
-string curSnap = "";
+
 
 //Screen dimension constants
 int SCREEN_WIDTH = 640;
@@ -176,29 +176,7 @@ void LaunchGame(string gameName)
 
 	currentGamePlayTime = SDL_GetTicks();
 }
-//-----------------------------------------------------------------------------------------
-void LoadCurrentSnapshot()
-{
-	string gameName = mainMenu->GetCurrentSelectedItemRomName();
 
-	if (curSnap == gameName)
-		return;
-
-	string imgPath = CFGHelper::snapsPath + "\\" + FileUtils::GetFileNameNoExt(gameName) + ".png";
-	
-	SDL_Surface *temp = IMG_Load(imgPath.c_str());
-	if (temp == NULL)
-		return;
-
-	SDL_FillRect(SnapImgSurface, NULL, 0x000000);
-	SDL_BlitSurface(temp, NULL, SnapImgSurface, NULL);
-
-	//transfer the completed surface to the texture
-	SDL_UpdateTexture(SnapTexture, NULL, SnapImgSurface->pixels, SnapImgSurface->pitch);
-
-	SDL_FreeSurface(temp);	
-	curSnap = gameName;
-}
 //-----------------------------------------------------------------------------------------
 VOID CALLBACK WaitOrTimerCallback(
 	_In_  PVOID lpParameter,
@@ -208,7 +186,7 @@ VOID CALLBACK WaitOrTimerCallback(
 	//MessageBox(0, L"The process has exited.", L"INFO", MB_OK);
 	SDL_RestoreWindow(window);
 	menuMode = true;
-	LoadCurrentSnapshot();
+	snaps->LoadCurrentSnapshot();
 	currentGamePlayTime = SDL_GetTicks() - currentGamePlayTime;
 	WriteDBInfo();
 	return;
@@ -244,12 +222,12 @@ void LogicUpdate()
 		if (P1Controls.CheckJoystickFlag(JOY_DOWN))
 		{
 			mainMenu->Next(SDL_GetTicks());
-			LoadCurrentSnapshot();
+			snaps->LoadCurrentSnapshot();
 		}
 		else if (P1Controls.CheckJoystickFlag(JOY_UP))
 		{
 			mainMenu->Prev(SDL_GetTicks());
-			LoadCurrentSnapshot();
+			snaps->LoadCurrentSnapshot();
 		}
 
 		if (P1Controls.CheckButtonFlag(BUTTON1))
@@ -477,33 +455,6 @@ void WriteDBInfo()
 
 }
 //-----------------------------------------------------------------------------------------
-
-void ListChildWindows(HWND hWnd, DWORD dwPIDCheck)
-{
-	DWORD dwPID;
-	wchar_t szBuffer[1000] = { 0 };
-	GetWindowThreadProcessId(hWnd, &dwPID);
-	GetWindowText(hWnd, szBuffer, 1000);
-	//if (dwPID == dwPIDCheck)
-	//	printf("%-8X %-40s %-8d\n", hWnd, szBuffer, dwPID);
-	for (hWnd = GetWindow(hWnd, GW_CHILD); hWnd != NULL; hWnd = GetWindow(hWnd, GW_HWNDNEXT))
-		ListChildWindows(hWnd, dwPIDCheck);
-}
-
-int mainExample2(int argc, char **argv)
-{
-	HWND hDesktopWindow = NULL;
-	if (argc == 1)
-	{
-		printf("Invalid  arguments\n");
-		return 0;
-	}
-	hDesktopWindow = GetDesktopWindow();
-	ListChildWindows(hDesktopWindow, atoi(argv[1]));
-	return 0;
-}
-
-//-----------------------------------------------------------------------------------------
 bool IsStringInVector(vector<string> & list, string keyword)
 {
 	for (size_t i = 0; i < list.size(); i++)
@@ -514,6 +465,7 @@ bool IsStringInVector(vector<string> & list, string keyword)
 	}
 	return false;
 }
+//-----------------------------------------------------------------------------------------
 void RemoveCrappyROMS(bool deleteZip = false)
 {
 	string output;

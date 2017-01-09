@@ -48,12 +48,12 @@ void handle_keys(SDL_Event* event, bool *quit)
 		else if (event->key.keysym.sym == SDLK_DOWN)
 		{
 			mainMenu->Next();
-			LoadCurrentSnapshot();
+			snaps->LoadCurrentSnapshot();
 		}
 		else if (event->key.keysym.sym == SDLK_UP)
 		{
 			mainMenu->Prev();
-			LoadCurrentSnapshot();
+			snaps->LoadCurrentSnapshot();
 		}
 	}
 }
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 	
 	bool populateDB = false;
 	string dbOut;
-	
+	int largeFontSize = 48;
 	db.openSQLiteDB(CFGHelper::dbPath, dbOut);
 	//check to see if we are making a new db table or we have an existing one
 	db.executeSQL("pragma schema_version",dbOut);
@@ -131,15 +131,10 @@ int main(int argc, char* argv[])
 	InitDirectInput(mainWindowHandle);
 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-	unsigned int rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
-	SnapImgSurface = SDL_CreateRGBSurface(0, 500, 500, 32, rmask, gmask, bmask, amask);
-
-	//this pixel format is STRANGE! but its the one that works with the mame snaps...
-	SnapTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, 500, 500);
-
+	
 	if (populateDB)
 	{
-		TTF_Font* Sans = TTF_OpenFont(menuFontPath.c_str(), 36); 
+		TTF_Font* Sans = TTF_OpenFont(menuFontPath.c_str(), largeFontSize);
 		SDL_Color White = { 255, 255, 255 }; 
 		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, "Cant find your game database, Generating it now...please wait", White);
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage); //now you can convert it into a texture
@@ -157,7 +152,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		TTF_Font* Sans = TTF_OpenFont(menuFontPath.c_str(), 36);
+		TTF_Font* Sans = TTF_OpenFont(menuFontPath.c_str(), largeFontSize);
 		SDL_Color White = { 255, 255, 255 };
 		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, "Loading...", White);
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage); 
@@ -198,12 +193,13 @@ int main(int argc, char* argv[])
 	
 	mainMenu = new Menu(renderer, AllGameListInfo, SCREEN_WIDTH, SCREEN_HEIGHT, menuFontPath, fontSize, SDL_Color{ 0,0,255 }, SDL_Color{ 255,255,255 }, SDL_Color{ 0,0,255 });
 	
-	SnapImgRect.x = mainMenu->GetMenuWidth() + 50;
-	SnapImgRect.y = (SCREEN_HEIGHT / 2) - (250);
-	SnapImgRect.w = 500;
-	SnapImgRect.h = 500;
+	snaps = new SnapShot(renderer, mainMenu, mainMenu->GetMenuWidth()+2, 10, SCREEN_WIDTH, SCREEN_HEIGHT);
+	/*SnapImgRect.w = (int)float((SCREEN_WIDTH / 3) * 2);
+	SnapImgRect.h = SCREEN_HEIGHT / 2;
+	SnapImgRect.x = ((SCREEN_WIDTH - ) / 2) + SnapImgRect.w / 4;
+	SnapImgRect.y = (SnapImgRect.h / 2);*/
 
-	LoadCurrentSnapshot();
+	snaps->LoadCurrentSnapshot();
 	ResetButtonPressTimer();
 
 	SDL_Event event;
@@ -222,7 +218,7 @@ int main(int argc, char* argv[])
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 		SDL_RenderClear(renderer);
-		SDL_RenderCopy(renderer, SnapTexture, NULL, &SnapImgRect);
+		snaps->Draw();
 		mainMenu->Draw();
 
 		
@@ -233,7 +229,7 @@ int main(int argc, char* argv[])
 	SDL_RemoveTimer(inputTimer);
 	SDL_RemoveTimer(totalRuntime);
 
-	SDL_DestroyTexture(SnapTexture);
+	
 
 	SDL_DestroyWindow(window);
 	IMG_Quit();
