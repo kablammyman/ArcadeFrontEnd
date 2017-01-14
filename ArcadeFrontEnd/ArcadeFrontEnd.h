@@ -22,12 +22,10 @@ bool menuMode = true;
 
 
 BOOL CALLBACK	 EnumWindowsProc(HWND hwnd, LPARAM param);
-
 VOID CALLBACK WaitOrTimerCallback(_In_  PVOID lpParameter,_In_  BOOLEAN TimerOrWaitFired);
-
 void LaunchGame(string gameName);
-
 void WriteDBInfo();
+
 
 unsigned int lastButtonPressTime;
 unsigned int buttonPressTimeout = 30000;//should be 5 minutes
@@ -58,7 +56,6 @@ SnapShot *snaps;
 
 SDL_Window *window;
 SDL_Renderer *renderer;
-
 
 
 //Screen dimension constants
@@ -208,10 +205,7 @@ void StartGame(bool startRandom = false)
 void LogicUpdate()
 {
 	
-	if (P1Controls.CheckForAllInputFlags())
-		ResetButtonPressTimer();
-
-	
+		
 	if (IsButtonTimeUp() && !menuMode)
 	{
 		SendMessage(mameWindowHandle, WM_CLOSE, 0, 0);
@@ -219,27 +213,46 @@ void LogicUpdate()
 
 	if (menuMode)
 	{
-		if (P1Controls.CheckJoystickFlag(JOY_DOWN))
+		if (joystick[0].PlayerControls.CheckForAllInputFlags())
+			ResetButtonPressTimer();
+
+		if (joystick[0].PlayerControls.CheckJoystickFlag(JOY_DOWN))
 		{
 			mainMenu->Next(SDL_GetTicks());
 			snaps->LoadCurrentSnapshot();
 		}
-		else if (P1Controls.CheckJoystickFlag(JOY_UP))
+		else if (joystick[0].PlayerControls.CheckJoystickFlag(JOY_UP))
 		{
 			mainMenu->Prev(SDL_GetTicks());
 			snaps->LoadCurrentSnapshot();
 		}
 
-		if (P1Controls.CheckButtonFlag(BUTTON1))
+		if (joystick[0].PlayerControls.CheckButtonFlag(BUTTON1))
 		{
 			StartGame();
 		}
+		else if (joystick[0].PlayerControls.CheckButtonReleaseFlag(BUTTON2))
+		{
+			bool skipUp = false;
+			if (joystick[0].PlayerControls.CheckJoystickFlag(JOY_UP))
+				skipUp = true;
+
+			mainMenu->SkipToNextLetter(skipUp);
+			snaps->LoadCurrentSnapshot();
+		} 
 
 		//select a new random game
 		if (isIdle)
 		{
 			StartGame(true);
 		}
+	}
+	//if in game, check all inputs to make sure the game is not set to idle
+	else
+	{
+		for (int i = 0; i < enumCurJoystickIndex; i++)
+			if (joystick[i].PlayerControls.CheckForAllInputFlags())
+				ResetButtonPressTimer();
 	}
 }
 
@@ -533,3 +546,4 @@ void RemoveCrappyROMS(bool deleteZip = false)
 		}
 	}
 }
+

@@ -60,6 +60,7 @@ public:
 	void Next(unsigned delay = 0);
 	void Prev(unsigned delay = 0);
 	void SkipToLetter(char letter);
+	void SkipToNextLetter(bool skipUp);
 	void SelectRandomGame();
 	int GetMenuWidth() { return menuWidth; }
 	int GetMenuHeight() { return menuHeight; }

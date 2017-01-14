@@ -151,10 +151,10 @@ void Menu::SelectRandomGame()
 {
 	int max = (int)menuItems.size()-1;
 	if (max - 0 == 1)
-		curSlectedItem = (1 + rand() % 10) > 5 ? 1 : 0;
+		curMenuListIndex = (1 + rand() % 10) > 5 ? 1 : 0;
 
 	else
-		curSlectedItem = (((max + 1) * rand()) / RAND_MAX);
+		curMenuListIndex = (((max + 1) * rand()) / RAND_MAX);
 	
 
 	int listEnd = (int)float(max / numItemsToDisplay) - 1;
@@ -174,7 +174,7 @@ void Menu::SkipToLetter(char letter)
 
 	for (size_t i = 0; i < menuItems.size(); i++)
 	{
-		if (menuItems[i].name[0] == letter)
+		if (menuItems[i].romName[0] == letter)
 		{
 			curSlectedItem = 0;
 			curMenuListIndex = (int)i;
@@ -185,6 +185,68 @@ void Menu::SkipToLetter(char letter)
 		}
 	}
 	//if we get here, there are no roms starting with the letter specified
+}
+//---------------------------------------------------------------------------------------
+void Menu::SkipToNextLetter( bool skipUp)
+{
+	bool done = false;
+	char nextLetter = curLetter;
+	char startLetter = curLetter;
+	while (!done)
+	{
+		if (!skipUp)
+		{
+			if ((nextLetter >= 'A' && nextLetter < 'Z') || (nextLetter >= 'a' && nextLetter < 'z') ||
+				(nextLetter >= '0' || nextLetter < '9'))
+			{
+				nextLetter++;
+			}
+			else if (nextLetter == '9')
+			{
+				nextLetter = 'a';
+			}
+			else // if (nextLetter == 'Z' || nextLetter == 'z')
+			{
+				nextLetter = '0';
+			}
+		}
+		else
+		{
+			if ((nextLetter <= 'Z' && nextLetter > 'A') || (nextLetter <= 'z' && nextLetter > 'a') ||
+				(nextLetter <= '9' || nextLetter > '0'))
+			{
+				nextLetter--;
+			}
+			else //if (nextLetter == '0')
+			{
+				nextLetter = 'z';
+			}
+			/*else 
+			{
+				nextLetter = '0';
+			}*/
+		}
+		for (size_t i = 0; i < menuItems.size(); i++)
+		{
+			char indexLetter = menuItems[i].romName[0];
+			if (indexLetter == nextLetter)
+			{
+				SkipToLetter(indexLetter);
+				done = true;
+				break;
+			}
+			else if (indexLetter == nextLetter + 1)
+			{
+				break;
+			}
+			/*else if (startLetter == indexLetter)//we went a full loop?!
+			{
+				SkipToLetter(startLetter);
+				done = true;
+				break;
+			}*/
+		}
+	}
 }
 //---------------------------------------------------------------------------------------
 std::string Menu::GetCurrentSelectedItemRomName()

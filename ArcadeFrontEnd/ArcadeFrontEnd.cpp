@@ -36,13 +36,10 @@ void handle_keys(SDL_Event* event, bool *quit)
 
 	else if (event->type == SDL_KEYUP)
 	{
-		if (event->key.keysym.sym == SDLK_e)
+		if (event->key.keysym.sym == SDLK_RETURN)
 		{
 			string gameName = mainMenu->GetCurrentSelectedItemRomName();
-			LaunchGame(gameName);
-			//printf("test");
-			//mainMenu->SkipToLetter('7');
-			
+			LaunchGame(gameName);			
 		}
 
 		else if (event->key.keysym.sym == SDLK_DOWN)
