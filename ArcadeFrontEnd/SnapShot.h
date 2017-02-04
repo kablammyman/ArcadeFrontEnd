@@ -20,4 +20,5 @@ public:
 	~SnapShot();
 	void LoadCurrentSnapshot();
 	void Draw();
+	static std::string GetReadableTimeFromMilis(unsigned int milis);
 };

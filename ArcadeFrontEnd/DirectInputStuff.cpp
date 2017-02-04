@@ -1,109 +1,15 @@
-#pragma once
-#include <Windows.h>
-#pragma warning(push)
-#pragma warning(disable:6000 28251)
-#include <dinput.h>
-#pragma warning(pop)
-
-#include <dinputd.h>
-
-#define JOY_UP    1
-#define JOY_DOWN  2
-#define JOY_LEFT  4
-#define JOY_RIGHT 8
-
-#define BUTTON1 1
-#define BUTTON2 2
-#define BUTTON3 4
-#define BUTTON4 8
-#define BUTTON5 16
-#define BUTTON6 32
-#define BUTTON_COIN 64
-#define BUTTON_START 128
-
-#define MAX_JOYSTICKS 10
-
-struct JoysticFlags
-{
-	unsigned int joystick;
-	unsigned int buttons;
-	unsigned int lastJoyState;
-	unsigned int lastButtonState;
-	bool b2pressed;
-	inline void ClearFlags()
-	{
-		joystick =0;
-		buttons = 0;
-	}
-
-	inline void AddToJoystickFlag(unsigned int flag)
-	{
-		joystick = joystick| flag;
-	}
-	inline void AddToButtonFlag(unsigned int flag)
-	{
-		buttons = buttons | flag;
-	}
-	inline bool CheckJoystickFlag(unsigned int flag)
-	{
-		return (bool)(joystick & flag);
-	}
-	inline bool CheckButtonFlag(unsigned int flag)
-	{
-		return (bool)(buttons & flag);
-	}
-	inline bool CheckForAllInputFlags()
-	{
-		return (bool)(joystick > 0) ||(buttons > 0);
-	}
-	inline bool CheckButtonReleaseFlag(unsigned int flag)
-	{
-
-		if (lastButtonState & flag)
-		{
-			if (!(buttons & flag))
-			{
-				lastButtonState &= ~flag;
-				return true;
-			}
-		}
-		return false;
-
-	}
-};
+#include "stdafx.h"
+#include "DirectInputStuff.h"
 
 // DirectInput Variables
 LPDIRECTINPUT8 fDI; // Root DirectInput Interface
 LPDIRECTINPUTDEVICE8 fDIKeyboard; // The keyboard device
 unsigned char fDIKeyboardState[256];
 
-struct Joy
-{
-	LPDIRECTINPUTDEVICE8    g_pJoystick = nullptr;
-	JoysticFlags PlayerControls;
-	DIJOYSTATE2 state;// DInput joystick state  for update input
-};
-
 Joy joystick[MAX_JOYSTICKS];
 int enumCurJoystickIndex = 0;
 int curIndex = 0;
-//-----------------------------------------------------------------------------
-// Defines, constants, and global variables
-//-----------------------------------------------------------------------------
-BOOL CALLBACK    EnumObjectsCallback(const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pContext);
-BOOL CALLBACK    EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pContext);
-
-#define SAFE_DELETE(p)  { if(p) { delete (p);     (p)=nullptr; } }
-#define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=nullptr; } }
-LPDIRECTINPUT8          g_pDI = nullptr;
-
-
-
-struct DI_ENUM_CONTEXT
-{
-	DIJOYCONFIG* pPreferredJoyCfg;
-	bool bPreferredJoyCfgValid;
-};
+LPDIRECTINPUT8   g_pDI = nullptr;
 
 //-----------------------------------------------------------------------------------------
 HRESULT InitDirectInput(HWND hDlg)
@@ -189,7 +95,7 @@ HRESULT InitDirectInput(HWND hDlg)
 		// Enumerate the joystick objects. The callback function enabled user
 		// interface elements for objects that are found, and sets the min/max
 		// values property for discovered axes.
-		
+
 		//ugh, stupid call backs! i gotta do this hack!
 		curIndex = i;
 		if (FAILED(hr = joystick[i].g_pJoystick->EnumObjects(EnumObjectsCallback, (VOID*)hDlg, DIDFT_ALL)))
@@ -219,8 +125,8 @@ BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance,
 
 	// Obtain an interface to the enumerated joystick.
 	hr = g_pDI->CreateDevice(pdidInstance->guidInstance, &joystick[enumCurJoystickIndex].g_pJoystick, nullptr);
-	
-	
+
+
 	// If it failed, then we can't use this joystick. (Maybe the user unplugged
 	// it while we were in the middle of enumerating it.)
 	if (FAILED(hr))
@@ -240,7 +146,7 @@ BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance,
 //       joystick. This function enables user interface elements for objects
 //       that are found to exist, and scales axes min/max values.
 //-----------------------------------------------------------------------------
-BOOL CALLBACK EnumObjectsCallback(const DIDEVICEOBJECTINSTANCE* pdidoi,VOID* pContext)
+BOOL CALLBACK EnumObjectsCallback(const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pContext)
 {
 	HWND hDlg = (HWND)pContext;
 
@@ -276,19 +182,25 @@ BOOL CALLBACK EnumObjectsCallback(const DIDEVICEOBJECTINSTANCE* pdidoi,VOID* pCo
 HRESULT UpdateInputState()
 {
 	HRESULT hr;
-	hr = fDIKeyboard->GetDeviceState(sizeof(fDIKeyboardState),(LPVOID)&fDIKeyboardState);
+	hr = fDIKeyboard->GetDeviceState(sizeof(fDIKeyboardState), (LPVOID)&fDIKeyboardState);
+
+	//keyboard arrow keys are mostly to track movement within menu
+	if (fDIKeyboardState[DIK_UP] & 0x80)
+		joystick[0].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::UP);
+	else if (fDIKeyboardState[DIK_DOWN] & 0x80)
+		joystick[0].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::DOWN);
 	
+	if (fDIKeyboardState[DIK_LEFT] & 0x80)
+		joystick[0].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::LEFT);
+	else if (fDIKeyboardState[DIK_RIGHT] & 0x80)
+		joystick[0].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::RIGHT);
+	
+	//track coin usage while testing
 	if (fDIKeyboardState[DIK_5] & 0x80)
-	{
-		while (fDIKeyboardState[DIK_5] & 0x80) {}
-		//BUTTON_COIN
-		//player 1 coin
-	}
+		joystick[0].PlayerControls.AddToButtonFlag(1 << 10);
 	if (fDIKeyboardState[DIK_6] & 0x80)
-	{
-		while (fDIKeyboardState[DIK_6] & 0x80) {}
-		//player 2 coin
-	}
+		joystick[0].PlayerControls.AddToButtonFlag(1 << 11);
+	
 
 	for (int i = 0; i < enumCurJoystickIndex; i++)
 	{
@@ -321,14 +233,14 @@ HRESULT UpdateInputState()
 			return hr; // The device should have been acquired during the Poll()
 
 		if (joystick[i].state.lY < -100)
-			joystick[i].PlayerControls.AddToJoystickFlag(JOY_UP);
+			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::UP);
 		else if (joystick[i].state.lY > 100)
-			joystick[i].PlayerControls.AddToJoystickFlag(JOY_DOWN);
+			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::DOWN);
 
 		if (joystick[i].state.lX < -100)
-			joystick[i].PlayerControls.AddToJoystickFlag(JOY_LEFT);
+			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::LEFT);
 		else if (joystick[i].state.lX > 100)
-			joystick[i].PlayerControls.AddToJoystickFlag(JOY_RIGHT);
+			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::RIGHT);
 
 
 		for (int j = 0; j < 10; j++)
@@ -336,14 +248,8 @@ HRESULT UpdateInputState()
 			if (joystick[i].state.rgbButtons[j] & 0x80)
 			{
 				joystick[i].PlayerControls.AddToButtonFlag(1 << j);
-				joystick[i].PlayerControls.lastButtonState = joystick[i].PlayerControls.buttons;
-				//if(j == 1) 
-				//	joystick[i].PlayerControls.b2pressed = true;
 			}
 		}
-
-		joystick[i].PlayerControls.lastJoyState = joystick[i].PlayerControls.joystick;
-		
 	}
 	return S_OK;
 }

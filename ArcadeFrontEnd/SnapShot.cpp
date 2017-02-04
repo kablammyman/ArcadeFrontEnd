@@ -21,6 +21,11 @@ SnapShot::SnapShot()
 //-----------------------------------------------------------------------------------------
 SnapShot::SnapShot(SDL_Renderer *r, Menu *m, int windowX, int windowY, int windowW, int windowH)
 {
+	/*SnapImgRect.w = (int)float((SCREEN_WIDTH / 3) * 2);
+	SnapImgRect.h = SCREEN_HEIGHT / 2;
+	SnapImgRect.x = ((SCREEN_WIDTH - ) / 2) + SnapImgRect.w / 4;
+	SnapImgRect.y = (SnapImgRect.h / 2);*/
+
 	SnapImgRect.x = windowX;
 	SnapImgRect.y = windowY;
 	SnapImgRect.w = windowH;
@@ -64,6 +69,43 @@ void SnapShot::LoadCurrentSnapshot()
 
 	SDL_FreeSurface(temp);
 	curSnap = romName;
+}
+//-----------------------------------------------------------------------------------------
+string SnapShot::GetReadableTimeFromMilis(unsigned int milis)
+{
+	int seconds = (int)(milis / 1000) % 60;
+	int minutes = (int)((milis / (1000 * 60)) % 60);
+	int hours = (int)((milis / (1000 * 60 * 60)) % 24);
+	string ret;
+
+	if (hours > 0)
+	{
+		ret += to_string(hours);
+		if(hours > 1) 
+			ret += " hours ";
+		else
+			ret += " hour ";
+	}
+
+	if (minutes > 0)
+	{
+		ret += to_string(minutes);
+		if (minutes > 1)
+			ret += " minutes ";
+		else
+			ret += " minute ";
+	}
+
+	if (seconds > 0)
+	{
+		ret += " and " + to_string(minutes);
+		if (seconds > 1)
+			ret += " seconds";
+		else
+			ret += " second";
+	}
+
+	return ret;
 }
 //-----------------------------------------------------------------------------------------
 void SnapShot::Draw()

@@ -7,17 +7,7 @@
 #include "SDL_ttf.h"
 #include "SDL_syswm.h"
 #include "SDL_image.h"
-struct GameInfo
-{
-	std::string name;
-	std::string romName;
-	std::string manufacturer;
-	std::string year;
-	std::string genre;
-	int id;
-
-	static bool sortFn(GameInfo &i, GameInfo &j) { return (i.name<j.name); }
-};
+#include "GameInfo.h"
 
 
 class Menu
