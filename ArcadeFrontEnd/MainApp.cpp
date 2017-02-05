@@ -13,9 +13,11 @@ MainApp::MainApp()
 
 	sceneIndex = 0;
 	populateDB = false;
-	string dbOut;
+
 	largeFontSize = 48;
 	fontSize = 8;
+	admin = new AdminWork(&AllGameListInfo, &db);
+	admin->AddObserver(this);
 }
 
 MainApp::~MainApp()
@@ -25,6 +27,7 @@ MainApp::~MainApp()
 void MainApp::AddMainScreen()
 {
 	mainMenu = new MainScreen(renderer, AllGameListInfo, &db,SCREEN_WIDTH, SCREEN_HEIGHT, screenStruct.fontPath, screenStruct.fontSize, SDL_Color{ 0,0,255 }, SDL_Color{ 255,255,255 }, SDL_Color{ 0,0,255 });
+	mainMenu->AddObserver(this);
 	allScenes.push_back(mainMenu);
 }
 
@@ -41,13 +44,22 @@ void MainApp::InitDB()
 		string create = "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,romName TEXT ,name TEXT,year TEXT, manufacturer TEXT,genre TEXT,numCredits INTEGER,totalPlayTime INTEGER,lastPlayedDate TEXT, numSelectedRandom INTEGER,numSelectedManually INTEGER";
 		if (!db.createTable(tableName, create))
 		{
-			MessageBox(NULL, L"cant create db", L"couldnt create teh db for your stats", MB_OK);
+			MessageBox(NULL, L"cant create db", L"couldnt create the db for your stats", MB_OK);
 			exit(0);
 		}
-		populateDB = true;
+
+		admin->DoGenerateGameList();
+		loading->SetLoadingMessage("Creating new game list");
+		curScreen = loading;
 	}
 	else
+	{
 		db.setTableName(tableName);
+		admin->DoFillGameList();
+		loading->SetLoadingMessage("Loading");
+		curScreen = loading;
+	}
+
 }
 
 void MainApp::InitWindow()
@@ -101,7 +113,7 @@ void MainApp::InitScreens()
 	screenStruct.fontSize = fontSize;
 	screenStruct.fontPath = menuFontPath;
 
-	loading = new LoadingScreen(&AllGameListInfo, &db, &screenStruct);
+	loading = new LoadingScreen(&screenStruct,"what am i doing with my life?");
 	loading->AddObserver(this);
 	
 	options = new OptionsScreen(&screenStruct);
@@ -130,15 +142,52 @@ void MainApp::GraphicsUpdate()
 
 void MainApp::Notify(Observee* observee)
 {
-	//need to figure out how to also specify the event type or name or something
-	if (observee->className == "LoadingScreen")
+	if (observee->className == "AdminWork")
 	{
-		AddMainScreen();
-		curScreen = mainMenu;
+		if (observee->id == 0)
+		{
+			AddMainScreen();
+			curScreen = mainMenu;
+			/*admin->DoTest();
+			loading->SetLoadingMessage("30 second test");
+			curScreen = loading;*/	
+		}
+		if (observee->id == 2)
+		{
+			curScreen = mainMenu;
+		}
 	}
 	else if (observee->className == "OptionScreen")
 	{
-		curScreen = mainMenu;
+		switch (observee->id)
+		{
+			curScreen = mainMenu;
+		case 2: 
+			loading->SetLoadingMessage("Refreshing Game List");
+			curScreen = loading;
+			admin->DoGenerateGameList();
+
+			break;
+		case 3:
+			loading->SetLoadingMessage("Removing roms we cant play or dont like");
+			curScreen = loading;
+			admin->DoRemoveCrappyRoms();
+			break;
+		case 4:
+			curScreen = mainMenu;
+			break;
+		case 5:
+			exit(0);
+			break;
+		}
+		
+	}
+	else if (observee->className == "MainScreen")
+	{
+		if (observee->id == 0)
+		{
+			curScreen = options;
+		}
 	}
 
 }

@@ -40,6 +40,7 @@ SDL_Renderer *MainScreen::renderer;
 
 MainScreen::MainScreen(SDL_Renderer *r, std::vector<GameInfo> & items, SQLiteUtils *d, int windowW, int windowH, std::string fontPath, int fontSize, SDL_Color textColor, SDL_Color backColor, SDL_Color edge)
 {
+	className = "MainScreen";
 	mainMenu = new Menu(r, items, windowW, windowH, fontPath, fontSize, textColor, backColor, edge);
 	snaps = new SnapShot(r, mainMenu, mainMenu->GetMenuWidth() + 2, 10, windowW, windowH);
 	snaps->LoadCurrentSnapshot();
@@ -127,6 +128,12 @@ void MainScreen::Update()
 			mainMenu->SkipToNextLetter(skipUp);
 			snaps->LoadCurrentSnapshot();
 		}
+		else if (joystick[0].PlayerControls.CheckButtonReleaseFlag(OPTIONS_BUTTON))
+		{
+			id = 0;
+			NotifyObservers();
+		}
+		
 
 		//select a new random game
 		if (isIdle)

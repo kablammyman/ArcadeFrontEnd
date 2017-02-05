@@ -3,6 +3,7 @@
 #include "OptionMenu.h"
 #include "SDL_ScreenStruct.h"
 
+
 class OptionsScreen : public Scene
 {
 	
@@ -14,6 +15,8 @@ class OptionsScreen : public Scene
 
 	SDL_ScreenStruct *screenStruct;
 	SDL_Rect visibleMenuRect;
+	
+
 public:
 	OptionsScreen(SDL_ScreenStruct *ss);
 	void Update();

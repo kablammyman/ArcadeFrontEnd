@@ -243,7 +243,7 @@ HRESULT UpdateInputState()
 			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::RIGHT);
 
 
-		for (int j = 0; j < 10; j++)
+		for (int j = 0; j < 15; j++)
 		{
 			if (joystick[i].state.rgbButtons[j] & 0x80)
 			{

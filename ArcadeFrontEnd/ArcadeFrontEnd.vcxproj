@@ -154,6 +154,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AdminWork.h" />
     <ClInclude Include="GameInfo.h" />
     <ClInclude Include="LoadingScreen.h" />
     <ClInclude Include="MainApp.h" />
@@ -170,6 +171,7 @@
     <ClInclude Include="WindowsStuff.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AdminWork.cpp" />
     <ClCompile Include="DirectInputStuff.cpp" />
     <ClCompile Include="LoadingScreen.cpp" />
     <ClCompile Include="MainApp.cpp" />

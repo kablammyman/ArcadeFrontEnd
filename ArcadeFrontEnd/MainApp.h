@@ -4,6 +4,7 @@
 #include "OptionsScreen.h"
 #include "LoadingScreen.h"
 #include "SDL_ScreenStruct.h"
+#include "AdminWork.h"
 
 #include "Observer.h"
 
@@ -21,12 +22,15 @@ public:
 	MainScreen *mainMenu;
 	OptionsScreen *options;
 	LoadingScreen *loading;
+	
 
 	SDL_Window *window;
 	SDL_Renderer *renderer;
+	
 	SQLiteUtils db;
 	vector<GameInfo> AllGameListInfo;
-
+	AdminWork *admin;
+	
 	SDL_ScreenStruct screenStruct;
 
 	bool populateDB;
