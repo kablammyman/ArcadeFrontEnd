@@ -11,11 +11,10 @@
 #include "StringUtils.h"
 #include "SQLiteUtils.h"
 
+
 #include "Scene.h"
 
-#define BUTTON1 1
-#define BUTTON2 2
-#define OPTIONS_BUTTON 3
+
 using namespace std;
 
 

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "DirectInputStuff.h"
+#include "FrontendButtons.h"
 
 // DirectInput Variables
 LPDIRECTINPUT8 fDI; // Root DirectInput Interface
@@ -10,7 +11,7 @@ Joy joystick[MAX_JOYSTICKS];
 int enumCurJoystickIndex = 0;
 int curIndex = 0;
 LPDIRECTINPUT8   g_pDI = nullptr;
-
+FrontEndControls feControls;
 //-----------------------------------------------------------------------------------------
 HRESULT InitDirectInput(HWND hDlg)
 {
@@ -102,6 +103,11 @@ HRESULT InitDirectInput(HWND hDlg)
 			return hr;
 	}
 
+	feControls.MAIN_JOYSTICK.SetButton(0, 0);//BUTTON VAR IS IGNROED HERE
+	feControls.SELECT.SetButton(0, 1);
+	feControls.SKIP.SetButton(0, 2);
+	feControls.OPTIONS.SetButton(0, 3);
+
 	return S_OK;
 }
 
@@ -186,20 +192,20 @@ HRESULT UpdateInputState()
 
 	//keyboard arrow keys are mostly to track movement within menu
 	if (fDIKeyboardState[DIK_UP] & 0x80)
-		joystick[0].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::UP);
+		joystick[0].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::UP);
 	else if (fDIKeyboardState[DIK_DOWN] & 0x80)
-		joystick[0].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::DOWN);
+		joystick[0].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::DOWN);
 	
 	if (fDIKeyboardState[DIK_LEFT] & 0x80)
-		joystick[0].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::LEFT);
+		joystick[0].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::LEFT);
 	else if (fDIKeyboardState[DIK_RIGHT] & 0x80)
-		joystick[0].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::RIGHT);
+		joystick[0].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::RIGHT);
 	
 	//track coin usage while testing
 	if (fDIKeyboardState[DIK_5] & 0x80)
-		joystick[0].PlayerControls.AddToButtonFlag(1 << 10);
+		joystick[0].PlayerControls.AddToButtonPresses(10);
 	if (fDIKeyboardState[DIK_6] & 0x80)
-		joystick[0].PlayerControls.AddToButtonFlag(1 << 11);
+		joystick[0].PlayerControls.AddToButtonPresses(11);
 	
 
 	for (int i = 0; i < enumCurJoystickIndex; i++)
@@ -233,24 +239,25 @@ HRESULT UpdateInputState()
 			return hr; // The device should have been acquired during the Poll()
 
 		if (joystick[i].state.lY < -100)
-			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::UP);
+			joystick[i].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::UP);
 		else if (joystick[i].state.lY > 100)
-			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::DOWN);
+			joystick[i].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::DOWN);
 
 		if (joystick[i].state.lX < -100)
-			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::LEFT);
+			joystick[i].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::LEFT);
 		else if (joystick[i].state.lX > 100)
-			joystick[i].PlayerControls.AddToJoystickFlag(Input::JOYSTICK_DIR::RIGHT);
+			joystick[i].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::RIGHT);
 
 
 		for (int j = 0; j < 15; j++)
 		{
 			if (joystick[i].state.rgbButtons[j] & 0x80)
 			{
-				joystick[i].PlayerControls.AddToButtonFlag(1 << j);
+				joystick[i].PlayerControls.AddToButtonPresses(j);
 			}
 		}
 	}
+
 	return S_OK;
 }
 
@@ -271,3 +278,34 @@ VOID FreeDirectInput()
 	// Release any DirectInput objects.
 	SAFE_RELEASE(g_pDI);
 }
+
+bool CheckForAnyMenuPress()
+{
+	return joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.CheckForAllInputFlags();
+}
+
+bool CheckForMenuUp()
+{
+	return joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.CheckJoystick(Input::JOYSTICK_DIR::UP);
+}
+
+bool CheckForMenuDown()
+{
+	return joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.CheckJoystick(Input::JOYSTICK_DIR::DOWN);
+}
+
+bool CheckForSelectPress()
+{
+	return joystick[feControls.SELECT.joystick].PlayerControls.CheckButtonReleaseFlag(feControls.SELECT.button);
+}
+
+bool CheckForSkipPress()
+{
+	return joystick[feControls.SKIP.joystick].PlayerControls.CheckButtonReleaseFlag(feControls.SKIP.button);
+}
+
+bool CheckForOptionsPress()
+{
+	return joystick[feControls.OPTIONS.joystick].PlayerControls.CheckButtonReleaseFlag(feControls.OPTIONS.button);
+}
+

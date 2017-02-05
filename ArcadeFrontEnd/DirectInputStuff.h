@@ -33,6 +33,14 @@ HRESULT UpdateInputState();
 BOOL CALLBACK    EnumObjectsCallback(const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pContext);
 BOOL CALLBACK    EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pContext);
 
+bool CheckForAnyMenuPress();
+bool CheckForMenuUp();
+bool CheckForMenuDown();
+bool CheckForSelectPress();
+bool CheckForSkipPress();
+bool CheckForOptionsPress();
+
+
 // DirectInput Variables
 extern LPDIRECTINPUT8 fDI; // Root DirectInput Interface
 extern LPDIRECTINPUTDEVICE8 fDIKeyboard; // The keyboard device

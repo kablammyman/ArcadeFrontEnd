@@ -4,6 +4,9 @@
 #include "CFGHelper.h"
 #include "SQLiteUtils.h"
 #include "WindowsStuff.h"
+#include "FrontendButtons.h"
+
+
 
 MainApp::MainApp()
 {
@@ -161,7 +164,6 @@ void MainApp::Notify(Observee* observee)
 	{
 		switch (observee->id)
 		{
-			curScreen = mainMenu;
 		case 2: 
 			loading->SetLoadingMessage("Refreshing Game List");
 			curScreen = loading;

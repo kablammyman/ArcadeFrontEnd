@@ -101,34 +101,34 @@ void MainScreen::Update()
 
 	if (menuMode)
 	{
-		if (joystick[0].PlayerControls.CheckForAllInputFlags())
+		if (CheckForAnyMenuPress())
 			ResetButtonPressTimer();
 
-		if (joystick[0].PlayerControls.CheckJoystickFlag(Input::JOYSTICK_DIR::DOWN))
+		if (CheckForMenuDown())
 		{
 			mainMenu->Next(SDL_GetTicks());
 			snaps->LoadCurrentSnapshot();
 		}
-		else if (joystick[0].PlayerControls.CheckJoystickFlag(Input::JOYSTICK_DIR::UP))
+		else if (CheckForMenuUp())
 		{
 			mainMenu->Prev(SDL_GetTicks());
 			snaps->LoadCurrentSnapshot();
 		}
 
-		if (joystick[0].PlayerControls.CheckButtonFlag(BUTTON1))
+		if (CheckForSelectPress())
 		{
 			StartGame();
 		}
-		else if (joystick[0].PlayerControls.CheckButtonReleaseFlag(BUTTON2))
+		else if (CheckForSkipPress())
 		{
 			bool skipUp = false;
-			if (joystick[0].PlayerControls.CheckJoystickFlag(Input::JOYSTICK_DIR::UP))
+			if (CheckForMenuUp())
 				skipUp = true;
 
 			mainMenu->SkipToNextLetter(skipUp);
 			snaps->LoadCurrentSnapshot();
 		}
-		else if (joystick[0].PlayerControls.CheckButtonReleaseFlag(OPTIONS_BUTTON))
+		else if (CheckForOptionsPress())
 		{
 			id = 0;
 			NotifyObservers();

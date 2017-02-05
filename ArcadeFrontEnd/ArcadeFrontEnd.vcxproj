@@ -155,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AdminWork.h" />
+    <ClInclude Include="FrontendButtons.h" />
     <ClInclude Include="GameInfo.h" />
     <ClInclude Include="LoadingScreen.h" />
     <ClInclude Include="MainApp.h" />

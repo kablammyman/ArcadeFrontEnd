@@ -31,7 +31,7 @@ OptionsScreen::OptionsScreen(SDL_ScreenStruct *ss)
 void OptionsScreen::Update()
 {
 	options->Update();
-	if (joystick[0].PlayerControls.CheckButtonFlag(1))
+	if (CheckForSelectPress())
 	{
 		id = options->GetCurrentSelectionItemIndex();
 		NotifyObservers();		
