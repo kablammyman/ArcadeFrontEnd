@@ -40,6 +40,12 @@ bool CheckForSelectPress();
 bool CheckForSkipPress();
 bool CheckForOptionsPress();
 
+bool CheckP1Coin();
+bool CheckP2Coin();
+bool CheckP3Coin();
+bool CheckP4Coin();
+
+void ClearMainJoystickInputFlags();
 
 // DirectInput Variables
 extern LPDIRECTINPUT8 fDI; // Root DirectInput Interface

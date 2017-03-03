@@ -2,12 +2,13 @@
 #include "OptionsScreen.h"
 #include "SDL_ttf.h"
 #include "DirectInputStuff.h"
+#include "MainApp.h"
 
 OptionsScreen::OptionsScreen(SDL_ScreenStruct *ss)
 {
 	screenStruct = ss;
 	className = "OptionScreen";
-	options = new OptionsMenu(10, 10, 25,screenStruct->fontSize*10, RGB{ 255, 255, 255 }, RGB{ 0, 255, 0 });
+	options = new OptionsMenu(10, 10, 25,screenStruct->fontSize*5, RGB{ 255, 255, 255 }, RGB{ 0, 255, 0 });
 	options->AddMenuOption("Idle Timer in mins", 5,1,60);
 	options->AddMenuOption("Input delay", 25,10,50);
 	options->AddMenuOption("Refresh rom list", -1);
@@ -16,7 +17,7 @@ OptionsScreen::OptionsScreen(SDL_ScreenStruct *ss)
 	options->AddMenuOption("Exit to windows",-1);
 	
 	options->SetInput(&joystick[0].PlayerControls);
-	options->SetInputDelay(25);
+	options->SetInputDelay(MainApp::inputDelay);
 
 	//infoImg = new RenderObject(0, 0, 900, 30);
 	visibleMenuRect = { 0,0,screenStruct->screenW,screenStruct->screenH };
@@ -43,7 +44,10 @@ void OptionsScreen::Draw()
 	{
 		ScreenText *screentext = options->GetMemuOptionAt(i);
 		RGB color = options->GetMenuItemColorAt(i);
-		string text = options->GetMenuItemStringAt(i) + "    "+ options->GetMenuItemValueStringAt(i);
+		string text = options->GetMenuItemStringAt(i);
+		
+		if(options->GetMenuItemValueAt(i) > -1)
+			text += "    "+ options->GetMenuItemValueStringAt(i);
 
 		SDL_Surface *temp = TTF_RenderText_Solid(screenStruct->font, text.c_str(), SDL_Color{ color.r, color.g,color.b });
 		SDL_Rect destRect = { screentext->x, screentext->y,temp->w,temp->h };

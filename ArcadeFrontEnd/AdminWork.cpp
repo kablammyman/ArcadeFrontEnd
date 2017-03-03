@@ -248,14 +248,19 @@ void AdminWork::RemoveCrappyROMS(bool deleteZip)
 		{
 			newGame.genre = db->GetDataFromSingleLineOutput(tokens[5]);
 			vector<string> temp = StringUtils::Tokenize(newGame.genre, "/");
-			StringUtils::TrimWhiteSpace(temp[0]);
-			if (IsStringInVector(badGenre, temp[0]))
-				deleteRom = true;
-			else if (temp.size() > 1)
+			//make sure the genre string isnt empty
+			if (temp.size() > 0)
 			{
-				StringUtils::TrimWhiteSpace(temp[1]);
-				if (IsStringInVector(badGenre, temp[1]))
+
+				StringUtils::TrimWhiteSpace(temp[0]);
+				if (IsStringInVector(badGenre, temp[0]))
 					deleteRom = true;
+				else if (temp.size() > 1)
+				{
+					StringUtils::TrimWhiteSpace(temp[1]);
+					if (IsStringInVector(badGenre, temp[1]))
+						deleteRom = true;
+				}
 			}
 		}
 

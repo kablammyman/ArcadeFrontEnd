@@ -74,6 +74,7 @@ bool MainScreen::IsButtonTimeUp()
 void MainScreen::StartGame(bool startRandom)
 {
 	ResetButtonPressTimer();
+	ClearMainJoystickInputFlags();
 	menuMode = false;
 	if (startRandom)
 		mainMenu->SelectRandomGame();
@@ -144,6 +145,23 @@ void MainScreen::Update()
 	//if in game, check all inputs to make sure the game is not set to idle
 	else
 	{
+		if (CheckP1Coin())
+		{
+			numCredits++;
+		}
+		if (CheckP2Coin())
+		{
+			numCredits++;
+		}
+		if (CheckP3Coin())
+		{
+			numCredits++;
+		}
+		if (CheckP4Coin())
+		{
+			numCredits++;
+		}
+
 		for (int i = 0; i < enumCurJoystickIndex; i++)
 			if (joystick[i].PlayerControls.CheckForAllInputFlags())
 				ResetButtonPressTimer();
@@ -203,6 +221,7 @@ void MainScreen::WriteDBInfo()
 
 void MainScreen::ReturnFromGame()
 {
+	ClearMainJoystickInputFlags();
 	menuMode = true;
 	snaps->LoadCurrentSnapshot();
 	currentGamePlayTime = SDL_GetTicks() - currentGamePlayTime;

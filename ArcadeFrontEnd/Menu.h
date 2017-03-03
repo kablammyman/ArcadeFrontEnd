@@ -25,7 +25,6 @@ class Menu
 	char curLetter;
 
 	std::vector<GameInfo> menuItems;
-	unsigned int selectionDelay; 
 	unsigned int curTime;
 
 	int curSlectedItem;

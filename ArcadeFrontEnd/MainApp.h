@@ -37,7 +37,7 @@ public:
 	string dbOut;
 	int largeFontSize;
 	int fontSize;
-
+	static int inputDelay;
 	MainApp();
 	~MainApp();
 	//part of observer
@@ -45,7 +45,7 @@ public:
 
 	void AddMainScreen();
 	void InitDB();
-	void InitWindow();
+	void InitWindow(bool fullScreen = true);
 	void InitScreens();
 	void LogicUpdate();
 	void GraphicsUpdate();

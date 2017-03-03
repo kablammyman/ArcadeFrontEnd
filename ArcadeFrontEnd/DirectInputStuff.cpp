@@ -6,7 +6,7 @@
 LPDIRECTINPUT8 fDI; // Root DirectInput Interface
 LPDIRECTINPUTDEVICE8 fDIKeyboard; // The keyboard device
 unsigned char fDIKeyboardState[256];
-
+bool useKeyboard = true;
 Joy joystick[MAX_JOYSTICKS];
 int enumCurJoystickIndex = 0;
 int curIndex = 0;
@@ -24,28 +24,30 @@ HRESULT InitDirectInput(HWND hDlg)
 		IID_IDirectInput8, (VOID**)&g_pDI, nullptr)))
 		return hr;
 	//keyboard inpout...mostly used for testing 
-	if (FAILED(hr = DirectInput8Create(GetModuleHandle(nullptr), DIRECTINPUT_VERSION,
-		IID_IDirectInput8, (VOID**)&fDI, nullptr)))
-		return hr;
-
-	// Create the connection to the keyboard device
-	fDI->CreateDevice(GUID_SysKeyboard, &fDIKeyboard, NULL);
-
-
-	if (fDIKeyboard)
+	if(useKeyboard)
 	{
-		fDIKeyboard->SetDataFormat(&c_dfDIKeyboard);
-		fDIKeyboard->SetCooperativeLevel(hDlg, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE);
-		fDIKeyboard->Acquire();
-	}
-	else
-	{
-		/*MessageBox(nullptr, TEXT("DirectInput Keyboard initialization Failed!"),
-		TEXT("DirectInput Sample"),
-		MB_ICONERROR | MB_OK);
-		EndDialog(hDlg, 0);*/
-	}
+		if (FAILED(hr = DirectInput8Create(GetModuleHandle(nullptr), DIRECTINPUT_VERSION,
+			IID_IDirectInput8, (VOID**)&fDI, nullptr)))
+			return hr;
 
+		// Create the connection to the keyboard device
+		fDI->CreateDevice(GUID_SysKeyboard, &fDIKeyboard, NULL);
+
+
+		if (fDIKeyboard)
+		{
+			fDIKeyboard->SetDataFormat(&c_dfDIKeyboard);
+			fDIKeyboard->SetCooperativeLevel(hDlg, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE);
+			fDIKeyboard->Acquire();
+		}
+		else
+		{
+			MessageBox(nullptr, TEXT("DirectInput Keyboard initialization Failed!"),
+				TEXT("DirectInput Sample"),
+				MB_ICONERROR | MB_OK);
+			EndDialog(hDlg, 0);
+		}
+	}
 	DIJOYCONFIG PreferredJoyCfg = { 0 };
 	DI_ENUM_CONTEXT enumContext;
 	enumContext.pPreferredJoyCfg = &PreferredJoyCfg;
@@ -103,11 +105,11 @@ HRESULT InitDirectInput(HWND hDlg)
 			return hr;
 	}
 
-	feControls.MAIN_JOYSTICK.SetButton(0, 0);//BUTTON VAR IS IGNROED HERE
+	/*feControls.MAIN_JOYSTICK.SetButton(0, 0);//BUTTON VAR IS IGNROED HERE
 	feControls.SELECT.SetButton(0, 1);
 	feControls.SKIP.SetButton(0, 2);
-	feControls.OPTIONS.SetButton(0, 3);
-
+	feControls.OPTIONS.SetButton(0, 3);*/
+	
 	return S_OK;
 }
 
@@ -188,24 +190,8 @@ BOOL CALLBACK EnumObjectsCallback(const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pC
 HRESULT UpdateInputState()
 {
 	HRESULT hr;
-	hr = fDIKeyboard->GetDeviceState(sizeof(fDIKeyboardState), (LPVOID)&fDIKeyboardState);
-
-	//keyboard arrow keys are mostly to track movement within menu
-	if (fDIKeyboardState[DIK_UP] & 0x80)
-		joystick[0].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::UP);
-	else if (fDIKeyboardState[DIK_DOWN] & 0x80)
-		joystick[0].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::DOWN);
-	
-	if (fDIKeyboardState[DIK_LEFT] & 0x80)
-		joystick[0].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::LEFT);
-	else if (fDIKeyboardState[DIK_RIGHT] & 0x80)
-		joystick[0].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::RIGHT);
-	
-	//track coin usage while testing
-	if (fDIKeyboardState[DIK_5] & 0x80)
-		joystick[0].PlayerControls.AddToButtonPresses(10);
-	if (fDIKeyboardState[DIK_6] & 0x80)
-		joystick[0].PlayerControls.AddToButtonPresses(11);
+	if(useKeyboard)
+		hr = fDIKeyboard->GetDeviceState(sizeof(fDIKeyboardState), (LPVOID)&fDIKeyboardState);
 	
 
 	for (int i = 0; i < enumCurJoystickIndex; i++)
@@ -253,11 +239,30 @@ HRESULT UpdateInputState()
 		{
 			if (joystick[i].state.rgbButtons[j] & 0x80)
 			{
-				joystick[i].PlayerControls.AddToButtonPresses(j);
+				joystick[i].PlayerControls.AddToButtonPresses(j);//0 indexed
 			}
 		}
 	}
 
+	if (useKeyboard)
+	{
+		//keyboard arrow keys are mostly to track movement within menu
+		if (fDIKeyboardState[DIK_UP] & 0x80)
+			joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::UP);
+		else if (fDIKeyboardState[DIK_DOWN] & 0x80)
+			joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::DOWN);
+
+		if (fDIKeyboardState[DIK_LEFT] & 0x80)
+			joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::LEFT);
+		else if (fDIKeyboardState[DIK_RIGHT] & 0x80)
+			joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.AddToJoystickState(Input::JOYSTICK_DIR::RIGHT);
+
+		//track coin usage while testing
+		if (fDIKeyboardState[DIK_5] & 0x80)
+			joystick[feControls.COIN1.joystick].PlayerControls.AddToButtonPresses(feControls.COIN1.button - 1);
+		if (fDIKeyboardState[DIK_6] & 0x80)
+			joystick[feControls.COIN2.joystick].PlayerControls.AddToButtonPresses(feControls.COIN2.button - 1);
+	}
 	return S_OK;
 }
 
@@ -279,6 +284,10 @@ VOID FreeDirectInput()
 	SAFE_RELEASE(g_pDI);
 }
 
+void ClearMainJoystickInputFlags()
+{
+	joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.ClearAllFlags();
+}
 bool CheckForAnyMenuPress()
 {
 	return joystick[feControls.MAIN_JOYSTICK.joystick].PlayerControls.CheckForAllInputFlags();
@@ -309,3 +318,22 @@ bool CheckForOptionsPress()
 	return joystick[feControls.OPTIONS.joystick].PlayerControls.CheckButtonReleaseFlag(feControls.OPTIONS.button);
 }
 
+bool CheckP1Coin()
+{
+	return joystick[feControls.COIN1.joystick].PlayerControls.CheckButtonReleaseFlag(feControls.COIN1.button);
+}
+
+bool CheckP2Coin()
+{
+	return joystick[feControls.COIN2.joystick].PlayerControls.CheckButtonReleaseFlag(feControls.COIN2.button);
+}
+
+bool CheckP3Coin()
+{
+	return joystick[feControls.COIN3.joystick].PlayerControls.CheckButtonReleaseFlag(feControls.COIN3.button);
+}
+
+bool CheckP4Coin()
+{
+	return joystick[feControls.COIN4.joystick].PlayerControls.CheckButtonReleaseFlag(feControls.COIN4.button);
+}

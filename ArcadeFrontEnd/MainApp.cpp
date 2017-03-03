@@ -7,6 +7,7 @@
 #include "FrontendButtons.h"
 
 
+int MainApp::inputDelay;
 
 MainApp::MainApp()
 {
@@ -17,6 +18,7 @@ MainApp::MainApp()
 	sceneIndex = 0;
 	populateDB = false;
 
+	inputDelay = 5;
 	largeFontSize = 48;
 	fontSize = 8;
 	admin = new AdminWork(&AllGameListInfo, &db);
@@ -65,18 +67,28 @@ void MainApp::InitDB()
 
 }
 
-void MainApp::InitWindow()
+void MainApp::InitWindow(bool fullScreen)
 {
 	// Create an application window with the following settings:
+	if(!fullScreen)
 	window = SDL_CreateWindow(
 		"Arcade Frontend",                  // window title
 		SDL_WINDOWPOS_UNDEFINED,           // initial x position
 		SDL_WINDOWPOS_UNDEFINED,           // initial y position
 		SCREEN_WIDTH,                               // width, in pixels
 		SCREEN_HEIGHT,                               // height, in pixels
-													 //SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE
 		SDL_WINDOW_RESIZABLE
 	);
+	else
+		window = SDL_CreateWindow(
+			"Arcade Frontend",                  // window title
+			SDL_WINDOWPOS_UNDEFINED,           // initial x position
+			SDL_WINDOWPOS_UNDEFINED,           // initial y position
+			SCREEN_WIDTH,                               // width, in pixels
+			SCREEN_HEIGHT,                               // height, in pixels
+			SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE
+		);
+
 	// Check that the window was successfully created
 	if (window == NULL) {
 		// In the case that the window could not be made...
@@ -151,13 +163,16 @@ void MainApp::Notify(Observee* observee)
 		{
 			AddMainScreen();
 			curScreen = mainMenu;
-			/*admin->DoTest();
-			loading->SetLoadingMessage("30 second test");
-			curScreen = loading;*/	
 		}
-		if (observee->id == 2)
+		else if (observee->id == 1)
 		{
 			curScreen = mainMenu;
+		}
+		else
+		{
+			/*admin->DoTest();
+			loading->SetLoadingMessage("30 second test");
+			curScreen = loading;*/
 		}
 	}
 	else if (observee->className == "OptionScreen")
