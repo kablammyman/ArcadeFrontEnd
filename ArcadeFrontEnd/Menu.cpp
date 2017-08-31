@@ -105,12 +105,8 @@ void Menu::PositionSelector()
 //---------------------------------------------------------------------------------------
 void Menu::Next(unsigned delay)
 {
-	
-	int selectionDelay = 5;
-	if(delay - curTime < selectionDelay)
+	if(!inputTimer.TimeUp(delay))
 		return;
-	
-	curTime = delay;
 
 	if(curSlectedItem < numItemsToDisplay-1)
 		curSlectedItem++;
@@ -129,11 +125,8 @@ void Menu::Next(unsigned delay)
 //---------------------------------------------------------------------------------------
 void Menu::Prev(unsigned delay)
 {
-	int selectionDelay = 5;
-	if (delay - curTime < selectionDelay)
+	if (!inputTimer.TimeUp(delay))
 		return;
-
-	curTime = delay;
 
 	if (curSlectedItem > 0)
 		curSlectedItem--;

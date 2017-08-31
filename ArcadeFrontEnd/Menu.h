@@ -12,6 +12,24 @@
 
 class Menu
 {
+	struct InputTimer 
+	{
+		unsigned int curTime;
+		unsigned int selectionDelay;
+		unsigned int  curInputTime;
+		bool TimeUp(unsigned int delay)
+		{
+			//how to do "if holding input for X seconds, shorten delay time"?
+			if (delay - curTime < selectionDelay)
+			{
+				curTime = delay;
+				return true;
+			}
+			return false;
+		}
+	};
+	InputTimer inputTimer;
+
 	SDL_Renderer *renderer;
 	SDL_Color menuTextColor;
 	SDL_Color backgroundColor;
@@ -25,7 +43,7 @@ class Menu
 	char curLetter;
 
 	std::vector<GameInfo> menuItems;
-	unsigned int curTime;
+	
 
 	int curSlectedItem;
 	int numItemsToDisplay;

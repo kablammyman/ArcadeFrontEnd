@@ -4,6 +4,7 @@
 #include "StringUtils.h"
 #include "GameInfo.h"
 #include "CFGHelper.h"
+#include <Windows.h>
 #include <fstream>
 
 AdminWork::AdminWork(std::vector<GameInfo> *a, SQLiteUtils *d)

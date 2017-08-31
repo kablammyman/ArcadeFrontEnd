@@ -143,7 +143,7 @@ void MainApp::InitScreens()
 
 void MainApp::LogicUpdate()
 {
-	curScreen->Update();	
+	curScreen->UpdateScene();
 }
 
 void MainApp::GraphicsUpdate()
@@ -151,7 +151,7 @@ void MainApp::GraphicsUpdate()
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 	SDL_RenderClear(renderer);
 
-	curScreen->Draw();
+	curScreen->DrawScene();
 	SDL_RenderPresent(renderer);
 }
 
