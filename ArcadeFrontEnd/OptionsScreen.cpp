@@ -14,7 +14,7 @@ OptionsScreen::OptionsScreen(SDL_ScreenStruct *ss)
 	white.b = 255;
 	green.g = 255;
 
-	options = new OptionsMenu(10, 10, 25,screenStruct->fontSize*5,white, green);
+	options = new OptionsMenu(10, 10, 25,screenStruct->fontSize*3,white, green);
 	options->AddMenuOption("Idle Timer in mins", 5,1,60);
 	options->AddMenuOption("Input delay", 25,10,50);
 	options->AddMenuOption("Refresh rom list", -1);
@@ -35,7 +35,7 @@ OptionsScreen::OptionsScreen(SDL_ScreenStruct *ss)
 	optionsTexture = SDL_CreateTextureFromSurface(screenStruct->renderer, optionsSurface);
 
 }
-void OptionsScreen::Update()
+void OptionsScreen::UpdateScene()
 {
 	options->Update();
 	if (CheckForSelectPress())
@@ -44,7 +44,7 @@ void OptionsScreen::Update()
 		NotifyObservers();		
 	}
 }
-void OptionsScreen::Draw()
+void OptionsScreen::DrawScene()
 {
 	for (size_t i = 0; i < options->GetNumMenuItems(); i++)
 	{

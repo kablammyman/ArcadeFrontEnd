@@ -23,7 +23,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <RemoteDebuggerServerName>ARCADE-PC</RemoteDebuggerServerName>
-    <DebuggerFlavor>WindowsRemoteDebugger</DebuggerFlavor>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <RemoteDebuggerCommand>C:\arcadefrontend\arcadefrontend.exe</RemoteDebuggerCommand>
     <RemoteDebuggerConnection>RemoteWithoutAuthentication</RemoteDebuggerConnection>
     <RemoteDebuggerWorkingDirectory>C:\arcadefrontend</RemoteDebuggerWorkingDirectory>

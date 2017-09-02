@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	//inputTimer = SDL_AddTimer(DEFAULT_RESOLUTION, ticktock, NULL);//when was the last time someone pressed any sort of button
 	//totalRuntime = SDL_AddTimer(DEFAULT_RESOLUTION, ticktock, NULL);//how long has the arcade been on
 
-	app.InitWindow(false);
+	app.InitWindow();
 	app.InitScreens();
 	app.InitDB();
 
@@ -55,14 +55,19 @@ int main(int argc, char* argv[])
 
 	next_time = SDL_GetTicks() + TICK_INTERVAL;
 	bool done = false;
+	
+
 	while (!done)
 	{
 		UpdateInputState();
 		app.LogicUpdate();
-		
+
 		//Handle events on queue
 		while (SDL_PollEvent(&e) != 0)
 		{
+			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) 
+				done = true;
+
 			//User requests quit
 			if (e.type == SDL_QUIT)
 			{

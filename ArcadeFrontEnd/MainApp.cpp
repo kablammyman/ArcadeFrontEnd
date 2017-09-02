@@ -12,8 +12,8 @@ int MainApp::inputDelay;
 MainApp::MainApp()
 {
 	//Screen dimension constants
-	SCREEN_WIDTH = 640;
-	SCREEN_HEIGHT = 480;
+	SCREEN_WIDTH = 1280;
+	SCREEN_HEIGHT = 1024;
 
 	sceneIndex = 0;
 	populateDB = false;

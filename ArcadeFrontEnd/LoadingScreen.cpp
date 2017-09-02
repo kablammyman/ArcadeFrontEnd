@@ -44,7 +44,7 @@ void LoadingScreen::SetLoadingMessage(string msg)
 }
 
 
-void LoadingScreen::Update()
+void LoadingScreen::UpdateScene()
 {
 
 	messageRect.x++;
@@ -57,7 +57,7 @@ void LoadingScreen::Update()
 		SDL_RenderCopy(screenStruct->renderer, SnapTexture, NULL, &destRect);*/
 }
 
-void LoadingScreen::Draw()
+void LoadingScreen::DrawScene()
 {
 	SDL_RenderCopy(screenStruct->renderer, messageTexture, NULL, &messageRect);
 	SDL_RenderPresent(screenStruct->renderer);

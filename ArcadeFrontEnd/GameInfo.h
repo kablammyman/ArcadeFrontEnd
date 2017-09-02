@@ -2,6 +2,7 @@
 
 #include <string>
 
+
 struct GameInfo
 {
 	std::string name;
@@ -9,6 +10,9 @@ struct GameInfo
 	std::string manufacturer;
 	std::string year;
 	std::string genre;
+	std::string lastPlayedDate;
+	int numCredits;
+	long totalPlayTime;
 	int id;
 
 	static bool sortFn(GameInfo &i, GameInfo &j) { return (i.name<j.name); }

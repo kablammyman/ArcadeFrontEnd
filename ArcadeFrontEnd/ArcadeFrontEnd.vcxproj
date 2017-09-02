@@ -149,7 +149,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib\x64\;$(MY_X64_RELEASE_LIBS);%(AdditionalLibraryDirectories);D:\source\Utils\SQLiteUtils\SQLite3\win32\lib\x86</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;SDL2_image.lib;dinput8.lib;dxguid.lib;CFGUtils.lib;FileUtils.lib;StringUtils.lib;SQLiteUtils.lib;GameUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;SDL2_image.lib;dinput8.lib;dxguid.lib;CFGUtils.lib;FileUtils.lib;StringUtils.lib;D:\source\Utils old\x64\Release\SQLiteUtils.lib;GameUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

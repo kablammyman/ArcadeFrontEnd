@@ -44,6 +44,7 @@ MainScreen::MainScreen(SDL_Renderer *r, std::vector<GameInfo> & items, SQLiteUti
 	mainMenu = new Menu(r, items, windowW, windowH, fontPath, fontSize, textColor, backColor, edge);
 	snaps = new SnapShot(r, mainMenu, mainMenu->GetMenuWidth() + 2, 10, windowW, windowH);
 	snaps->LoadCurrentSnapshot();
+	
 	ResetButtonPressTimer();
 	menuMode = true;
 	isIdle = false;
@@ -91,7 +92,7 @@ void MainScreen::StartGame(bool startRandom)
 	LaunchGame(romName, FileUtils::GetFileNameFromPathString(CFGHelper::mamePath));
 	currentGamePlayTime = SDL_GetTicks();
 }
-void MainScreen::Update()
+void MainScreen::UpdateScene()
 {
 
 
@@ -228,7 +229,7 @@ void MainScreen::ReturnFromGame()
 	WriteDBInfo();
 }
 
-void MainScreen::Draw()
+void MainScreen::DrawScene()
 {
 	snaps->Draw();
 	mainMenu->Draw();

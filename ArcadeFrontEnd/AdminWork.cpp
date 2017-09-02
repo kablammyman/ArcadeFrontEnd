@@ -167,10 +167,11 @@ void AdminWork::GenerateGameList(string mameListPath, string catverListPath)
 void AdminWork::FillGameListFromDB(bool verify)
 {
 	string output;
-	string querey = "id,romName,name,manufacturer,year,genre";
+	string querey = "id,romName,name,manufacturer,year,numCredits,totalPlayTime,lastPlayedDate,genre";
 	db->doDBQuerey(querey, output);
 	vector<string> allGames;
 	db->SplitDataIntoResults(allGames, output, "ID", false);
+	int numFields = 8;
 
 	for (size_t i = 0; i < allGames.size(); i++)
 	{
@@ -182,9 +183,13 @@ void AdminWork::FillGameListFromDB(bool verify)
 		newGame.name = db->GetDataFromSingleLineOutput(tokens[2]);
 		newGame.manufacturer = db->GetDataFromSingleLineOutput(tokens[3]);
 		newGame.year = db->GetDataFromSingleLineOutput(tokens[4]);
+		newGame.numCredits = atoi(db->GetDataFromSingleLineOutput(tokens[5]).c_str());
+		newGame.totalPlayTime = atol(db->GetDataFromSingleLineOutput(tokens[6]).c_str());
+		newGame.lastPlayedDate = db->GetDataFromSingleLineOutput(tokens[7]);
 
-		if (tokens.size() >= 5)
-			newGame.genre = db->GetDataFromSingleLineOutput(tokens[5]);
+		//genre is and always will be last
+		if (tokens.size() >= numFields)
+			newGame.genre = db->GetDataFromSingleLineOutput(tokens[numFields]);
 
 
 		if (verify)

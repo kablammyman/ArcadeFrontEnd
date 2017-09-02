@@ -32,6 +32,7 @@ class MainScreen : public Scene
 
 	Menu *mainMenu;
 	SnapShot *snaps;
+
 	SQLiteUtils *db;
 	GameInfo curGameStats;
 public:
@@ -44,8 +45,8 @@ public:
 	static SDL_Window *window;
 	static SDL_Renderer *renderer;
 
-	void Update();
-	void Draw();
+	void UpdateScene();
+	void DrawScene();
 };
 
 

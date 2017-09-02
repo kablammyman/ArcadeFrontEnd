@@ -32,7 +32,7 @@ public:
 	}
 	
 	void SetLoadingMessage(string msg);
-	void Draw();
-	void Update();
+	void DrawScene();
+	void UpdateScene();
 
 };

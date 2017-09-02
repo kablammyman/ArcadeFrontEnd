@@ -19,6 +19,6 @@ class OptionsScreen : public Scene
 
 public:
 	OptionsScreen(SDL_ScreenStruct *ss);
-	void Update();
-	void Draw();
+	void UpdateScene();
+	void DrawScene();
 };

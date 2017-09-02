@@ -14,7 +14,6 @@ SnapShot::SnapShot()
 	SnapTexture = NULL;
 	SnapImgRect;
 	
-	curSnap = "";
 	menu = NULL;
 	renderer = NULL;
 }
@@ -30,6 +29,13 @@ SnapShot::SnapShot(SDL_Renderer *r, Menu *m, int windowX, int windowY, int windo
 	SnapImgRect.y = windowY;
 	SnapImgRect.w = windowH;
 	SnapImgRect.h = windowW;
+
+	giImgRect.x = 0;
+	giImgRect.y = 0;
+	giImgRect.w = windowW;
+	giImgRect.h = 100;
+
+	
 	renderer = r;
 	menu = m;
 	unsigned int rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
@@ -49,26 +55,45 @@ void SnapShot::LoadCurrentSnapshot()
 {
 	if(menu == NULL)
 		return;
-	string romName = menu->GetCurrentSelectedItemRomName();
 
+	GameInfo game = menu->GetCurrentSelectedItem();
 
-	if (curSnap == romName)
+	if (curGamneInfo.id == game.id)
 		return;
 
-	string imgPath = CFGHelper::snapsPath + "\\" + FileUtils::GetFileNameNoExt(romName) + ".png";
+
+	//first get the snap shot
+	string imgPath = CFGHelper::snapsPath + "\\" + FileUtils::GetFileNameNoExt(game.romName) + ".png";
 
 	SDL_Surface *temp = IMG_Load(imgPath.c_str());
-	if (temp == NULL)
-		return;
+	if (temp != NULL)
+	{
+		SDL_FillRect(SnapImgSurface, NULL, 0x000000);
+		SDL_BlitSurface(temp, NULL, SnapImgSurface, NULL);
+		//transfer the completed surface to the texture
+		SDL_UpdateTexture(SnapTexture, NULL, SnapImgSurface->pixels, SnapImgSurface->pitch);
+		giImgRect.y = temp->h+1;
+		
+		SDL_FreeSurface(temp);
+	}
 
-	SDL_FillRect(SnapImgSurface, NULL, 0x000000);
-	SDL_BlitSurface(temp, NULL, SnapImgSurface, NULL);
+
+	//now get the game info
+	buffer = new PIXMAP(giImgRect.w, giImgRect.h);
+
+	font.Draw(buffer, game.name, 0, 0);
+	font.Draw(buffer, game.manufacturer, 0, 11);
+	font.Draw(buffer, game.genre, 0, 22);
+	font.Draw(buffer, game.year, 0, 33);
+	font.Draw(buffer, "num credits spent: " + to_string(game.numCredits), 0, 44);
+	font.Draw(buffer, "total Play time: " + GetReadableTimeFromMilis(game.totalPlayTime), 0, 55);
+	font.Draw(buffer, "last played on: "+ game.lastPlayedDate, 0, 66);
+
 
 	//transfer the completed surface to the texture
-	SDL_UpdateTexture(SnapTexture, NULL, SnapImgSurface->pixels, SnapImgSurface->pitch);
+	SDL_UpdateTexture(SnapTexture, &giImgRect, buffer->pixels, buffer->w * sizeof(Uint32));
 
-	SDL_FreeSurface(temp);
-	curSnap = romName;
+	curGamneInfo = game;
 }
 //-----------------------------------------------------------------------------------------
 string SnapShot::GetReadableTimeFromMilis(unsigned int milis)
@@ -111,4 +136,5 @@ string SnapShot::GetReadableTimeFromMilis(unsigned int milis)
 void SnapShot::Draw()
 {
 	SDL_RenderCopy(renderer, SnapTexture, NULL, &SnapImgRect);
+	//SDL_RenderCopy(renderer, giTexture, NULL, &giImgRect);
 }

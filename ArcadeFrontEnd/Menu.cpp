@@ -45,7 +45,7 @@ Menu::Menu(SDL_Renderer *r, std::vector<GameInfo> & items,int windowW, int windo
 	menuFontHeight = TTF_FontLineSkip(menuFont);
 
 	//calc menu dims
-	menuWidth = (int)float(windowW / 3);
+	menuWidth = (int)float(windowW / 2);
 	menuHeight = windowH - (int)(menuFontHeight * 2);
 	numItemsToDisplay = (int)float(menuHeight / menuFontHeight) - 1;
 
