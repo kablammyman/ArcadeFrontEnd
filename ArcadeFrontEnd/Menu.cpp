@@ -254,14 +254,14 @@ std::string Menu::GetCurrentSelectedItemRomName()
 	return menuItems[index].romName;
 }
 //---------------------------------------------------------------------------------------
-GameInfo Menu::GetCurrentSelectedItem()
+GameInfo *Menu::GetCurrentSelectedItem()
 {
 	size_t index = curSlectedItem + curMenuListIndex;
 
 	if (index > menuItems.size() - 1)
 		index = menuItems.size() - 1;
 
-	return menuItems[index];
+	return &menuItems[index];
 }
 //---------------------------------------------------------------------------------------
 void Menu::Draw()

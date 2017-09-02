@@ -38,6 +38,8 @@ SnapShot::SnapShot(SDL_Renderer *r, Menu *m, int windowX, int windowY, int windo
 	
 	renderer = r;
 	menu = m;
+	curGamneInfo = menu->GetCurrentSelectedItem();
+
 	unsigned int rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
 	SnapImgSurface = SDL_CreateRGBSurface(0, SnapImgRect.w, SnapImgRect.h, 32, rmask, gmask, bmask, amask);
 
@@ -56,14 +58,15 @@ void SnapShot::LoadCurrentSnapshot()
 	if(menu == NULL)
 		return;
 
-	GameInfo game = menu->GetCurrentSelectedItem();
+	GameInfo *game = menu->GetCurrentSelectedItem();
 
-	if (curGamneInfo.id == game.id)
+
+	if (curGamneInfo->id == game->id)
 		return;
 
 
 	//first get the snap shot
-	string imgPath = CFGHelper::snapsPath + "\\" + FileUtils::GetFileNameNoExt(game.romName) + ".png";
+	string imgPath = CFGHelper::snapsPath + "\\" + FileUtils::GetFileNameNoExt(game->romName) + ".png";
 
 	SDL_Surface *temp = IMG_Load(imgPath.c_str());
 	if (temp != NULL)
@@ -81,13 +84,13 @@ void SnapShot::LoadCurrentSnapshot()
 	//now get the game info
 	buffer = new PIXMAP(giImgRect.w, giImgRect.h);
 
-	font.Draw(buffer, game.name, 0, 0);
-	font.Draw(buffer, game.manufacturer, 0, 11);
-	font.Draw(buffer, game.genre, 0, 22);
-	font.Draw(buffer, game.year, 0, 33);
-	font.Draw(buffer, "num credits spent: " + to_string(game.numCredits), 0, 44);
-	font.Draw(buffer, "total Play time: " + GetReadableTimeFromMilis(game.totalPlayTime), 0, 55);
-	font.Draw(buffer, "last played on: "+ game.lastPlayedDate, 0, 66);
+	font.Draw(buffer, game->name, 0, 0);
+	font.Draw(buffer, game->manufacturer, 0, 11);
+	font.Draw(buffer, game->genre, 0, 22);
+	font.Draw(buffer, game->year, 0, 33);
+	font.Draw(buffer, "num credits spent: " + to_string(game->numCredits), 0, 44);
+	font.Draw(buffer, "total Play time: " + GetReadableTimeFromMilis(game->totalPlayTime), 0, 55);
+	font.Draw(buffer, "last played on: "+ game->lastPlayedDate, 0, 66);
 
 
 	//transfer the completed surface to the texture

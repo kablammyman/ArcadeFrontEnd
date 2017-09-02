@@ -175,10 +175,10 @@ void MainScreen::UpdateScene()
 //-----------------------------------------------------------------------------------------
 void MainScreen::WriteDBInfo()
 {
-	GameInfo gi = mainMenu->GetCurrentSelectedItem();
+	GameInfo *gi = mainMenu->GetCurrentSelectedItem();
 	int id;
 	string output;
-	SQLiteUtils::dbDataPair WhereClause(make_pair("romName", gi.romName));
+	SQLiteUtils::dbDataPair WhereClause(make_pair("romName", gi->romName));
 	//db->doDBQuerey("ID", WhereClause, output);
 	db->doDBQuerey("romName", WhereClause, output);
 
@@ -192,10 +192,10 @@ void MainScreen::WriteDBInfo()
 	if (gameData == "")
 	{
 		vector<SQLiteUtils::dbDataPair> newGameInfo;
-		newGameInfo.push_back(make_pair("romName", gi.romName));
-		newGameInfo.push_back(make_pair("name", gi.name));
-		newGameInfo.push_back(make_pair("manufacturer", gi.manufacturer));
-		newGameInfo.push_back(make_pair("year", gi.year));
+		newGameInfo.push_back(make_pair("romName", gi->romName));
+		newGameInfo.push_back(make_pair("name", gi->name));
+		newGameInfo.push_back(make_pair("manufacturer", gi->manufacturer));
+		newGameInfo.push_back(make_pair("year", gi->year));
 		newGameInfo.push_back(make_pair("numSelectedRandom", "0"));
 		newGameInfo.push_back(make_pair("numSelectedManually", "0"));
 		newGameInfo.push_back(make_pair("totalPlayTime", "0"));
@@ -218,6 +218,10 @@ void MainScreen::WriteDBInfo()
 	SQLiteUtils::dbDataPair WhereClause2(make_pair("id", to_string(id)));
 	db->UpdateIntEntry(updateGameInfo, WhereClause2, output);
 
+	//update the game info thats in mem
+	gi->numCredits += numCredits;
+	gi->totalPlayTime += currentGamePlayTime;
+	gi->lastPlayedDate = "Today";
 }
 
 void MainScreen::ReturnFromGame()

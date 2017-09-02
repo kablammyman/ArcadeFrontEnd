@@ -17,12 +17,11 @@ class SnapShot
 	SDL_Color titleColor;
 
 	Menu *menu;
-
-
+	
 	SDL_Texture *giTexture;
 	SDL_Rect giImgRect;
 
-	GameInfo curGamneInfo;
+	GameInfo *curGamneInfo;
 	//temp?? I prob should use the ttf fonts since they are much bigger
 	//TTF_Font* titleFont;
 	//SDL_Color titleColor;

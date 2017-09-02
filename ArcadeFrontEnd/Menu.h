@@ -61,7 +61,7 @@ public:
 	Menu(SDL_Renderer *r, std::vector<GameInfo> & items,int windowW, int windowH, std::string fontPath, int fontSize, SDL_Color textColor, SDL_Color backColor, SDL_Color edge);
 	~Menu();
 	
-	GameInfo GetCurrentSelectedItem();
+	GameInfo *GetCurrentSelectedItem();
 	std::string Menu::GetCurrentSelectedItemRomName();
 	void Draw();
 	void Next(unsigned delay = 0);
